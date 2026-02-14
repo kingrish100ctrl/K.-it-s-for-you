@@ -5,85 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For K</title>
     
-    <!-- Fonts -->
+    <!-- Fonts: Playfair (Headers), Lato (Body), Pinyon Script (Elegant) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&family=Pinyon+Script&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         /* -----------------------------------------------------------
-           RESET & GLOBAL VARIABLES
+           DESIGN SYSTEM: ROYAL CRIMSON & OBSIDIAN
         ----------------------------------------------------------- */
         :root {
-            --bg: #0B0B0F;
-            --bg-sec: #14141B;
-            --accent: #8B1E3F;
-            --accent-soft: #C44569;
-            --text-main: #E8E6EA;
-            --text-faded: #9A98A3;
-            --glow: rgba(196, 69, 105, 0.35);
+            /* Palette */
+            --bg-deep: #050505;       /* Almost pure black */
+            --bg-card: #0F0F0F;       /* Very subtle lift */
+            --accent-main: #7D1226;   /* Deep Blood Red / Crimson */
+            --accent-gold: #BFA15F;   /* Muted Antique Gold */
+            --text-main: #Eaeaea;     /* Off-white for readability */
+            --text-dim: #888888;      /* Grey for secondary text */
+            
+            /* Typography */
             --font-head: 'Playfair Display', serif;
-            --font-body: 'Inter', sans-serif;
-            --font-script: 'Great Vibes', cursive;
+            --font-body: 'Lato', sans-serif;
+            --font-script: 'Pinyon Script', cursive;
+
+            /* Transitions */
+            --ease-slow: cubic-bezier(0.4, 0.0, 0.2, 1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--bg);
+            background-color: var(--bg-deep);
             color: var(--text-main);
             font-family: var(--font-body);
-            overflow: hidden; /* No scrollbars */
+            overflow: hidden; /* App feel */
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         /* -----------------------------------------------------------
-           ANIMATIONS
+           CORE ANIMATIONS
         ----------------------------------------------------------- */
-        @keyframes breathe {
-            0% { background-color: #0B0B0F; }
-            50% { background-color: #121216; }
-            100% { background-color: #0B0B0F; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 10px var(--glow); transform: scale(1); }
-            50% { box-shadow: 0 0 25px var(--accent-soft); transform: scale(1.02); }
-            100% { box-shadow: 0 0 10px var(--glow); transform: scale(1); }
-        }
-        @keyframes textPulse {
-            0% { opacity: 0.7; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); text-shadow: 0 0 15px var(--glow); }
-            100% { opacity: 0.7; transform: scale(1); }
-        }
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
-            50% { opacity: 0.6; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
         }
 
-        body {
-            animation: breathe 8s infinite ease-in-out;
+        .reveal {
+            opacity: 0;
+            animation: fadeIn 1.2s var(--ease-slow) forwards;
         }
+
+        .delay-1 { animation-delay: 0.5s; }
+        .delay-2 { animation-delay: 1.0s; }
+        .delay-3 { animation-delay: 1.5s; }
 
         /* -----------------------------------------------------------
-           LAYOUT & TYPOGRAPHY
+           LAYOUT COMPONENTS
         ----------------------------------------------------------- */
         #app {
             width: 100%;
-            max-width: 760px;
+            max-width: 700px;
             height: 100%;
             position: relative;
             padding: 2rem;
@@ -94,7 +87,7 @@
             text-align: center;
         }
 
-        h1, h2, h3 {
+        h1, h2 {
             font-family: var(--font-head);
             font-weight: 400;
             letter-spacing: 0.05em;
@@ -104,237 +97,168 @@
 
         p {
             font-size: 1.1rem;
-            line-height: 1.7;
-            color: var(--text-faded);
+            line-height: 1.6;
+            color: var(--text-dim);
             margin-bottom: 1.5rem;
-            letter-spacing: 0.02em;
-        }
-
-        .script-text {
-            font-family: var(--font-script);
-            font-size: 2.2rem;
-            color: var(--accent-soft);
-            margin: 1rem 0;
-            line-height: 1.2;
         }
 
         .hidden { display: none !important; }
-        
-        /* Utility for fade entrances */
-        .reveal-element {
-            opacity: 0;
-            animation: fadeIn 0.9s ease-out forwards;
-        }
 
-        /* Page 4 Specific Animation Line */
-        .p4-line {
-            opacity: 0;
-            margin-bottom: 2rem;
-            /* Combines Fade In (immediate) and Pulse (starts after 1s) */
-            animation: fadeIn 1s ease-out forwards, textPulse 3s infinite 1s;
-        }
-        
-        .delay-1 { animation-delay: 0.3s; }
-        .delay-2 { animation-delay: 0.8s; }
-        .delay-3 { animation-delay: 1.5s; }
-
-        /* -----------------------------------------------------------
-           UI COMPONENTS
-        ----------------------------------------------------------- */
+        /* Buttons */
         button {
             background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--text-main);
-            padding: 14px 28px;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 12px 30px;
             font-family: var(--font-head);
-            font-size: 1rem;
-            letter-spacing: 0.1em;
+            font-size: 0.95rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.4s ease;
+            transition: all 0.5s ease;
             margin-top: 2rem;
-            border-radius: 2px;
-            opacity: 1;
+            opacity: 0; /* Hidden initially, requires .reveal class */
         }
 
         button:hover, button:active {
-            background: var(--accent);
-            box-shadow: 0 0 15px var(--glow);
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            box-shadow: 0 0 15px rgba(191, 161, 95, 0.3);
         }
 
+        /* Inputs */
         input {
             background: transparent;
             border: none;
-            border-bottom: 1px solid var(--text-faded);
+            border-bottom: 1px solid var(--text-dim);
             color: var(--text-main);
-            font-family: var(--font-body);
-            font-size: 1.2rem;
+            font-family: var(--font-head);
+            font-size: 1.4rem;
             padding: 10px;
             text-align: center;
-            width: 80%;
-            max-width: 300px;
+            width: 100%;
+            max-width: 280px;
             outline: none;
             margin-bottom: 2rem;
-            transition: border-color 0.3s;
         }
-
-        input:focus { border-bottom-color: var(--accent-soft); }
-        .error { animation: shake 0.5s ease-in-out; border-bottom-color: red !important; }
+        input:focus { border-bottom-color: var(--accent-main); }
+        .error { border-bottom-color: var(--accent-main); animation: shake 0.4s ease; }
 
         /* -----------------------------------------------------------
            PAGE SPECIFIC STYLES
         ----------------------------------------------------------- */
-        /* Page 1: Entry */
-        #page-1 { text-align: center; }
-
+        
         /* Page 2: Progress */
-        .progress-container {
-            width: 100%;
-            max-width: 300px;
-            height: 2px;
-            background: var(--bg-sec);
-            margin: 2rem auto;
-            position: relative;
-            overflow: hidden;
+        .progress-track {
+            width: 100%; max-width: 200px; height: 1px; background: #333; margin: 2rem auto; position: relative;
         }
-        .progress-bar {
-            position: absolute;
-            left: 0; top: 0; height: 100%; width: 0%;
-            background: var(--accent-soft);
-            transition: width 4s ease-in-out;
+        .progress-fill {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: var(--accent-main);
+            transition: width 2s ease-in-out;
         }
 
-        /* Page 3: List */
-        .card-stack {
+        /* Page 3: Cards */
+        .card-container {
+            width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            align-items: center;
+            gap: 12px;
             max-height: 60vh;
-            overflow-y: auto; 
+            overflow-y: auto;
+            padding-bottom: 20px;
+            /* Hide scrollbar */
             scrollbar-width: none; 
-            padding-bottom: 10px;
-            padding-top: 10px; 
+            -ms-overflow-style: none;
         }
-        .card-stack::-webkit-scrollbar { display: none; }
-        
-        .list-item {
-            background: var(--bg-sec);
-            padding: 1.2rem;
-            border-left: 2px solid var(--accent);
-            width: 100%;
-            text-align: left;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease;
-            display: none; 
-        }
-        .list-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-            display: block;
-        }
+        .card-container::-webkit-scrollbar { display: none; }
 
-        /* Page 4: Claim */
-        #page-4 { background: #050507; transition: background 2s; }
-        .heartbeat-text {
-            /* Kept for reference but not used on p4 text anymore to avoid conflict */
-            animation: pulseGlow 1.5s infinite;
+        .card-item {
+            background: var(--bg-card);
+            border-left: 2px solid var(--accent-main);
+            padding: 1rem;
+            text-align: left;
+            font-size: 1rem;
+            color: var(--text-main);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            display: none;
         }
+        .card-item.visible { display: block; opacity: 1; transform: translateY(0); }
 
         /* Page 6: Envelopes */
-        .envelope-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-        }
-        .envelope {
-            background: var(--bg-sec);
-            border: 1px solid var(--text-faded);
+        .env-wrapper { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+        .env {
+            border: 1px solid #333;
             padding: 1.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: border-color 0.3s;
+            background: var(--bg-card);
         }
-        .envelope:hover { border-color: var(--accent); }
-        .envelope.open {
-            background: var(--bg);
-            border: 1px solid var(--accent);
-            padding: 2rem;
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+        .env:hover { border-color: var(--accent-main); }
+        .env.open {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-deep);
             z-index: 10;
-            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            overflow-y: auto;
+            border: 1px solid var(--accent-main);
+            padding: 2rem;
         }
-        .envelope-content { display: none; text-align: left; margin-top: 1rem;}
-        .envelope.open .envelope-content { display: block; animation: fadeIn 1s; }
-        .envelope-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
-        .envelope.open .envelope-icon { display: none; }
+        .env-body { display: none; margin-top: 1rem; text-align: left; line-height: 1.8; }
+        .env.open .env-body { display: block; animation: fadeIn 0.8s; }
+        .env-icon { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; color: var(--accent-gold); }
+        .env.open .env-icon { display: none; }
 
         /* Page 7: Letter */
-        .letter-scroll {
+        .letter-box {
             width: 100%;
-            height: 60vh;
+            height: 65vh;
             overflow-y: scroll;
-            background: rgba(255,255,255,0.03);
+            background: var(--bg-card);
             padding: 2rem;
             text-align: left;
-            border-radius: 4px;
-            margin-bottom: 2rem;
+            border-top: 1px solid var(--accent-main);
+            border-bottom: 1px solid var(--accent-main);
             scrollbar-width: none;
         }
-        .letter-scroll::-webkit-scrollbar { display: none; }
-        .signature {
-            text-align: right;
-            font-family: var(--font-script);
-            font-size: 1.8rem;
-            color: var(--accent);
-            margin-top: 2rem;
+        .letter-box::-webkit-scrollbar { display: none; }
+        .sig { 
+            font-family: var(--font-script); 
+            font-size: 2rem; 
+            color: var(--accent-main); 
+            text-align: right; 
+            margin-top: 2rem; 
         }
 
         /* Page 8: Valentine */
-        #page-8 {
-            background: radial-gradient(circle at center, #1a050a 0%, #0B0B0F 100%);
-        }
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--accent-soft);
-            border-radius: 50%;
-        }
-
-        /* Final Page */
-        .stay-word {
-            font-family: var(--font-head);
-            font-size: 3rem;
-            letter-spacing: 0.2em;
-            color: var(--text-main);
-            animation: pulseGlow 3s infinite;
+        .val-title {
+            font-family: var(--font-script); 
+            font-size: 3.5rem;
+            color: var(--accent-main);
+            line-height: 1.2;
+            margin-bottom: 2rem;
         }
 
     </style>
 </head>
 <body>
 
+    <!-- Audio needs to be in the same folder as song.mp3 -->
     <audio id="bg-music" loop>
         <source src="song.mp3" type="audio/mpeg">
     </audio>
 
     <div id="app">
-        <!-- Content injected by JS -->
+        <!-- Content injected via JS -->
     </div>
 
     <script>
         /* -----------------------------------------------------------
-           DATA & CONFIG
+           CONTENT DATA
         ----------------------------------------------------------- */
-        const VALID_PASSWORDS = ['rishi', 'flash', 'flash133566'];
+        const PASSWORDS = ['rishi', 'flash', 'flash133566'];
         
         const TEXT_CARDS = [
             "Your soft, adorable voice… it lingers even after you stop speaking",
@@ -355,446 +279,332 @@
             "And I never drop it."
         ];
 
+        const ENV_CONTENT = [
+            {
+                title: "I",
+                text: "You spend so much time holding yourself together.<br>Choosing the right words… reacting the right way… pretending you’re more composed than you really feel.<br><br>You don’t need that here.<br>Here you can slow down, breathe, and let me hold the moment for you.<br>I’m not going anywhere."
+            },
+            {
+                title: "II",
+                text: "Look at you… following every line properly.<br>Such a well behaved girl.<br>Makes me wonder how long that innocence lasts when I start pushing a little more."
+            },
+            {
+                title: "III",
+                text: "Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home, heart pounding with anticipation. The door clicks open, and there you are, my sweet girl, positioned perfectly for your Master. Your eyes lift slowly to meet mine, locking in that intense gaze for a lingering moment, full of devotion and desire. Then, as a good sub should, you lower them submissively, casting your lashes down to the floor, exposing the curve of your neck like an offering.<br><br>My very first words are \"Look at you, my little slut, so eager and ready for Master\" and then..........."
+            }
+        ];
+
         /* -----------------------------------------------------------
-           STATE MANAGEMENT
+           STATE ENGINE
         ----------------------------------------------------------- */
-        let savedPage = parseInt(localStorage.getItem('story_page'));
-        
-        // Safety check: if savedPage is NaN or invalid, reset to 1
-        if (isNaN(savedPage) || savedPage < 1 || savedPage > 9) {
-            savedPage = 1;
-            localStorage.setItem('story_page', 1);
-        }
-
-        let state = {
-            page: savedPage,
-            musicStarted: false
-        };
-
         const app = document.getElementById('app');
         const audio = document.getElementById('bg-music');
-        audio.volume = 0.3;
+        
+        let state = {
+            page: parseInt(localStorage.getItem('crimson_page')) || 1,
+            musicActive: false
+        };
 
-        // Save progress helper
-        function saveState(pageNum) {
-            state.page = pageNum;
-            localStorage.setItem('story_page', pageNum);
+        // Safety reset if state is corrupted
+        if(state.page > 8 || state.page < 1) state.page = 1;
+
+        function savePage(n) {
+            state.page = n;
+            localStorage.setItem('crimson_page', n);
         }
 
-        // Music Fade In Helper
-        function startMusic() {
-            if (state.musicStarted) return;
-            state.musicStarted = true;
-            audio.play().catch(e => console.log("Audio waiting for interaction"));
-        }
-
-        function fadeVolume(target, duration) {
-            const step = 0.01;
-            const intervalTime = duration * step;
-            const interval = setInterval(() => {
-                if (audio.volume < target) {
-                    audio.volume = Math.min(target, audio.volume + step);
-                } else if (audio.volume > target) {
-                    audio.volume = Math.max(target, audio.volume - step);
-                } else {
-                    clearInterval(interval);
-                }
-            }, 50);
-        }
-
-        /* -----------------------------------------------------------
-           RENDER ENGINE
-        ----------------------------------------------------------- */
-        function renderPage() {
-            app.innerHTML = ''; // Clear current content
-            app.className = ''; // Clear page specific classes
-
-            switch(state.page) {
-                case 1: renderPage1(); break;
-                case 2: renderPage2(); break;
-                case 3: renderPage3(); break;
-                case 4: renderPage4(); break;
-                case 5: renderPage5(); break;
-                case 6: renderPage6(); break;
-                case 7: renderPage7(); break;
-                case 8: renderPage8(); break;
-                case 9: renderFinal(); break;
-                default: renderPage1();
+        // Music Logic
+        function initAudio() {
+            if(!state.musicActive) {
+                audio.volume = 0.3;
+                audio.play().catch(() => console.log("User interaction needed for audio"));
+                state.musicActive = true;
             }
         }
 
-        /* PAGE 1: ENTRY RITUAL */
-        function renderPage1() {
+        function fadeMusicUp() {
+            let vol = audio.volume;
+            let interval = setInterval(() => {
+                if(vol < 0.45) {
+                    vol += 0.01;
+                    audio.volume = vol;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        /* -----------------------------------------------------------
+           RENDERER
+        ----------------------------------------------------------- */
+        function render() {
+            app.innerHTML = '';
+            
+            // Global click to ensure audio starts on iOS/Android
+            if(!state.musicActive && state.page > 1) initAudio();
+
+            switch(state.page) {
+                case 1: page1(); break;
+                case 2: page2(); break;
+                case 3: page3(); break;
+                case 4: page4(); break;
+                case 5: page5(); break;
+                case 6: page6(); break;
+                case 7: page7(); break;
+                case 8: page8(); break;
+            }
+        }
+
+        /* --- PAGE 1: ENTRY --- */
+        function page1() {
             app.innerHTML = `
-                <div id="p1-content" style="opacity:0; transition: opacity 2s;">
-                    <p class="reveal-element">You are not meant to enter here casually.</p>
-                    <button id="ask-perm-btn" class="reveal-element delay-3">Ask permission</button>
-                    <div id="input-area" class="hidden" style="margin-top: 2rem;">
-                        <p class="reveal-element">Who do you belong to?</p>
-                        <input type="text" id="password-input" autocomplete="off" />
-                        <br/>
-                        <button id="submit-pass" style="margin-top:0;">Enter</button>
+                <div id="p1-wrap" style="transition: opacity 1s;">
+                    <p class="reveal">You are not meant to enter here casually.</p>
+                    <button id="btn-perm" class="reveal delay-2">Ask permission</button>
+                    <div id="input-zone" class="hidden" style="margin-top:2rem;">
+                        <p class="reveal">Who do you belong to?</p>
+                        <input type="text" id="pass" autocomplete="off">
+                        <br>
+                        <button id="btn-enter" class="reveal">Enter</button>
                     </div>
                 </div>
             `;
 
-            // Initial Delay
-            setTimeout(() => { 
-                const content = document.getElementById('p1-content');
-                if(content) content.style.opacity = 1; 
-            }, 800);
-
-            document.getElementById('ask-perm-btn').addEventListener('click', (e) => {
-                startMusic();
+            document.getElementById('btn-perm').onclick = (e) => {
+                initAudio();
                 e.target.style.display = 'none';
-                const area = document.getElementById('input-area');
-                area.classList.remove('hidden');
-                // Ensure text inside fades in
-                area.querySelectorAll('p').forEach(el => el.classList.add('reveal-element'));
-            });
+                const zone = document.getElementById('input-zone');
+                zone.classList.remove('hidden');
+            };
 
-            document.getElementById('submit-pass').addEventListener('click', checkPassword);
-        }
-
-        function checkPassword() {
-            const input = document.getElementById('password-input');
-            const val = input.value.trim().toLowerCase();
-            
-            if (VALID_PASSWORDS.includes(val)) {
-                // Success
-                document.getElementById('p1-content').style.opacity = 0.4;
-                app.innerHTML += `<p class="reveal-element" style="position:absolute; bottom: 20%;">...thinking</p>`;
-                
-                setTimeout(() => {
-                    app.innerHTML = `<h1 class="reveal-element">Come in.</h1>`;
+            document.getElementById('btn-enter').onclick = () => {
+                const val = document.getElementById('pass').value.trim().toLowerCase();
+                if(PASSWORDS.includes(val)) {
+                    document.getElementById('p1-wrap').style.opacity = 0.3;
                     setTimeout(() => {
-                        saveState(2);
-                        renderPage();
-                    }, 2500);
-                }, 3000);
-            } else {
-                // Fail
-                input.classList.add('error');
-                const btn = document.getElementById('submit-pass');
-                const originalText = btn.innerText;
-                btn.innerText = "The door stays closed.";
-                setTimeout(() => {
-                    input.classList.remove('error');
-                    btn.innerText = originalText;
-                    input.value = '';
-                }, 2000);
-            }
+                        app.innerHTML = `<h2 class="reveal">...thinking</h2>`;
+                        setTimeout(() => {
+                            app.innerHTML = `<h1 class="reveal">Come in.</h1>`;
+                            setTimeout(() => { savePage(2); render(); }, 2000);
+                        }, 2000);
+                    }, 500);
+                } else {
+                    document.getElementById('pass').classList.add('error');
+                    document.getElementById('btn-enter').innerText = "The door stays closed.";
+                    setTimeout(() => {
+                        document.getElementById('pass').classList.remove('error');
+                        document.getElementById('btn-enter').innerText = "Enter";
+                    }, 2000);
+                }
+            };
         }
 
-        /* PAGE 2: THE PAUSE */
-        function renderPage2() {
+        /* --- PAGE 2: WELCOME --- */
+        function page2() {
             app.innerHTML = `
-                <p class="reveal-element">Don’t rush.</p>
-                <p class="reveal-element delay-1">Just stay here for a moment.</p>
-                <div class="progress-container reveal-element delay-2">
-                    <div class="progress-bar" id="p2-bar"></div>
+                <h1 class="reveal">Welcome</h1>
+                <p class="reveal delay-1">Is my slut ready?</p>
+                <div class="progress-track reveal delay-1">
+                    <div id="bar" class="progress-fill"></div>
                 </div>
                 <button id="p2-btn" class="hidden">Continue if you trust me</button>
             `;
 
-            setTimeout(() => {
-                const bar = document.getElementById('p2-bar');
-                if(bar) bar.style.width = '100%';
-            }, 1000);
-
+            setTimeout(() => document.getElementById('bar').style.width = "100%", 800);
             setTimeout(() => {
                 const btn = document.getElementById('p2-btn');
-                if(btn) {
-                    btn.classList.remove('hidden');
-                    btn.classList.add('reveal-element');
-                    btn.onclick = () => {
-                        saveState(3);
-                        renderPage();
-                    };
-                }
-            }, 5000);
+                btn.classList.remove('hidden');
+                btn.classList.add('reveal');
+                btn.onclick = () => { savePage(3); render(); };
+            }, 3000);
         }
 
-        /* PAGE 3: 10 THINGS (FIXED) */
-        function renderPage3() {
+        /* --- PAGE 3: 10 THINGS (FIXED) --- */
+        function page3() {
             app.innerHTML = `
-                <h2 class="reveal-element">The 10 things I like about you</h2>
-                <div class="card-stack" id="card-stack"></div>
-                <div id="tap-hint" style="margin-top: 2rem; color: var(--text-faded); font-size: 0.8rem; opacity: 0.5;">(Tap to reveal)</div>
+                <h2 class="reveal">The 10 things I like about you</h2>
+                <div id="card-list" class="card-container"></div>
+                <p id="hint" style="font-size:0.8rem; margin-top:1rem; opacity:0.5;">(Tap to reveal)</p>
                 <button id="p3-btn" class="hidden">Come closer</button>
             `;
 
-            let cardIndex = 0;
-            const container = document.getElementById('card-stack');
+            const list = document.getElementById('card-list');
+            let index = 0;
 
-            // Global click handler for this page
-            function revealNextCard(e) {
-                // Prevent triggering if clicking the final button itself
-                if (e.target.id === 'p3-btn') return;
+            function revealCard() {
+                if(index < TEXT_CARDS.length) {
+                    const el = document.createElement('div');
+                    el.className = 'card-item visible';
+                    el.innerText = TEXT_CARDS[index];
+                    list.appendChild(el);
+                    el.scrollIntoView({behavior:'smooth', block:'end'});
+                    index++;
 
-                // Remove hint on first click
-                const hint = document.getElementById('tap-hint');
-                if(hint) hint.style.display = 'none';
-
-                if (cardIndex < TEXT_CARDS.length) {
-                    const div = document.createElement('div');
-                    div.className = 'list-item visible';
-                    div.innerText = TEXT_CARDS[cardIndex];
-                    container.appendChild(div);
-                    div.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    cardIndex++;
-                    
-                    if (cardIndex === TEXT_CARDS.length) {
-                        // All cards revealed
+                    if(index === TEXT_CARDS.length) {
+                        document.getElementById('hint').style.display = 'none';
                         setTimeout(() => {
                             const btn = document.getElementById('p3-btn');
                             btn.classList.remove('hidden');
-                            
-                            // Important: Use explicit class for visibility + animation
-                            btn.classList.add('reveal-element'); 
-                            
-                            // Force animation with 'forwards' to ensure it stays visible
-                            btn.style.animation = "fadeIn 1s ease-out forwards, pulseGlow 2s infinite"; 
-                            
-                            // Cleanup listener
-                            document.body.removeEventListener('click', revealNextCard);
-                            
+                            btn.classList.add('reveal'); 
+                            btn.style.opacity = '1'; 
                             btn.onclick = () => {
-                                saveState(4);
-                                renderPage();
+                                document.body.removeEventListener('click', revealCard);
+                                savePage(4);
+                                render();
                             };
-                        }, 500); // reduced delay for snappier feel
+                        }, 500);
                     }
                 }
             }
-            
-            // Initial delay before taps work
+
+            // Small delay before enabling click to prevent accidental triggers
             setTimeout(() => {
-                document.body.addEventListener('click', revealNextCard);
-            }, 1000);
+                document.body.addEventListener('click', (e) => {
+                    if(e.target.id !== 'p3-btn') revealCard();
+                });
+            }, 500);
         }
 
-        /* PAGE 4: CLAIM (FIXED - VISIBILITY) */
-        function renderPage4() {
-            app.style.backgroundColor = "#050507";
+        /* --- PAGE 4: CLAIM --- */
+        function page4() {
             app.innerHTML = `
-                <div id="p4-lines"></div>
+                <div id="lines-zone"></div>
                 <button id="p4-btn" class="hidden">Keep reading</button>
             `;
 
-            let index = 0;
-            const container = document.getElementById('p4-lines');
-
-            function showLine() {
-                // Safety check if user left page
-                if(!document.getElementById('p4-lines')) return;
-
-                if (index < CLAIM_LINES.length) {
+            let i = 0;
+            const zone = document.getElementById('lines-zone');
+            
+            function nextLine() {
+                if(i < CLAIM_LINES.length) {
                     const p = document.createElement('h2');
-                    // FIX: Use dedicated class .p4-line to avoid animation conflict
-                    p.className = 'p4-line'; 
-                    p.innerText = CLAIM_LINES[index];
-                    container.appendChild(p);
-                    index++;
-                    setTimeout(showLine, 2500); 
+                    p.className = 'reveal';
+                    p.innerText = CLAIM_LINES[i];
+                    zone.appendChild(p);
+                    i++;
+                    setTimeout(nextLine, 2500);
                 } else {
                     const btn = document.getElementById('p4-btn');
                     btn.classList.remove('hidden');
-                    btn.classList.add('reveal-element');
-                    btn.onclick = () => {
-                        saveState(5);
-                        renderPage();
-                    };
+                    btn.classList.add('reveal');
+                    btn.style.opacity = 1;
+                    btn.onclick = () => { savePage(5); render(); };
                 }
             }
-            setTimeout(showLine, 1000);
+            nextLine();
         }
 
-        /* PAGE 5: PRIVATE / TIMED */
-        function renderPage5() {
-            app.innerHTML = `<div id="p5-text" class="reveal-element"></div>`;
-            const textEl = document.getElementById('p5-text');
-
-            const seq = [
-                { text: "Put your phone down for five seconds", wait: 5000 },
-                { text: "Take one slow breath", wait: 4000 },
-                { text: "Now read the next line", wait: 2000 },
-                { text: "Good.", wait: 1000 }
+        /* --- PAGE 5: OBEDIENCE --- */
+        function page5() {
+            app.innerHTML = `<div id="q-box"></div>`;
+            const box = document.getElementById('q-box');
+            
+            const steps = [
+                { t: "Are you my personal property, right?", wait: 5000 },
+                { t: "Are you going to obey me at all cost, right?", wait: 4000 },
+                { t: "At your knees.", wait: 3000 },
+                { t: "Good girl.", wait: 1500 }
             ];
 
-            let step = 0;
-            
-            function runSeq() {
-                // Safety check
-                if(!document.getElementById('p5-text')) return;
-
-                if (step < seq.length) {
-                    textEl.style.opacity = 0;
+            let i = 0;
+            function run() {
+                if(i < steps.length) {
+                    box.innerHTML = `<h2 class="reveal">${steps[i].t}</h2>`;
                     setTimeout(() => {
-                        if(!textEl) return;
-                        textEl.innerHTML = `<h2>${seq[step].text}</h2>`;
-                        textEl.style.opacity = 1;
-                        setTimeout(() => {
-                            step++;
-                            runSeq();
-                        }, seq[step].wait);
-                    }, 1000);
+                        i++;
+                        run();
+                    }, steps[i].wait);
                 } else {
-                    app.innerHTML += `<button id="p5-btn" class="reveal-element">I will listen</button>`;
-                    document.getElementById('p5-btn').onclick = () => {
-                        saveState(6);
-                        renderPage();
-                    };
+                    app.innerHTML = `
+                        <h2 class="reveal">Good girl.</h2>
+                        <button id="p5-btn" class="reveal">Ready for a read?</button>
+                    `;
+                    document.getElementById('p5-btn').onclick = () => { savePage(6); render(); };
                 }
             }
-            runSeq();
+            run();
         }
 
-        /* PAGE 6: ENVELOPES (ROBUST FIX) */
-        function renderPage6() {
+        /* --- PAGE 6: ENVELOPES --- */
+        function page6() {
             app.innerHTML = `
-                <div class="envelope-container" id="env-cont">
-                    <!-- Envelopes injected here -->
-                </div>
-                <div id="p6-footer" class="hidden" style="margin-top:2rem;">
-                    <p class="reveal-element" style="color:var(--accent-soft)">Good girl.</p>
-                    <button id="p6-btn">Stay with me</button>
-                </div>
+                <div class="env-wrapper" id="envs"></div>
+                <button id="p6-btn" class="hidden">Stay with me</button>
             `;
 
-            const contents = [
-                {
-                    title: "Envelope 1",
-                    body: "You spend so much time holding yourself together.<br>Choosing the right words… reacting the right way… pretending you’re more composed than you really feel.<br><br>You don’t need that here.<br>Here you can slow down, breathe, and let me hold the moment for you.<br>I’m not going anywhere."
-                },
-                {
-                    title: "Envelope 2",
-                    body: "Look at you… following every line properly.<br>Such a well behaved girl.<br>Makes me wonder how long that innocence lasts when I start pushing a little more."
-                },
-                {
-                    title: "Envelope 3",
-                    body: "Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home, heart pounding with anticipation. The door clicks open, and there you are, my sweet girl, positioned perfectly for your Master. Your eyes lift slowly to meet mine, locking in that intense gaze for a lingering moment, full of devotion and desire. Then, as a good sub should, you lower them submissively, casting your lashes down to the floor, exposing the curve of your neck like an offering.<br><br>My very first words are \"Look at you, my little slut, so eager and ready for Master\" and then..........."
-                }
-            ];
+            const wrapper = document.getElementById('envs');
+            let opened = new Set();
 
-            const container = document.getElementById('env-cont');
-            const openedIndices = new Set();
-
-            contents.forEach((content, idx) => {
-                const env = document.createElement('div');
-                env.className = 'envelope reveal-element';
-                env.style.animationDelay = `${idx * 0.2}s`;
-                env.innerHTML = `
-                    <span class="envelope-icon">✉️</span>
-                    <h3 style="margin:0">Open Me</h3>
-                    <div class="envelope-content">
-                        <p>${content.body}</p>
-                        <button class="close-env" style="margin-top:1rem; font-size:0.8rem; padding: 10px;">Close</button>
+            ENV_CONTENT.forEach((c, idx) => {
+                const el = document.createElement('div');
+                el.className = 'env reveal';
+                el.style.animationDelay = (idx * 0.2) + 's';
+                el.innerHTML = `
+                    <span class="env-icon">✦</span>
+                    <div style="font-family:var(--font-head)">OPEN ENVELOPE ${c.title}</div>
+                    <div class="env-body">
+                        ${c.text}
+                        <div style="text-align:center; margin-top:2rem;">
+                            <span style="font-size:0.8rem; border-bottom:1px solid #555;">CLOSE</span>
+                        </div>
                     </div>
                 `;
-
-                // Open Logic
-                env.onclick = (e) => {
-                    if (e.target.classList.contains('close-env')) return;
-                    if (!env.classList.contains('open')) {
-                        env.classList.add('open');
-                        openedIndices.add(idx); 
-                        
-                        if (openedIndices.size === 3) {
-                            const footer = document.getElementById('p6-footer');
-                            footer.classList.remove('hidden');
-                            
-                            // Ensure button is visible
+                
+                el.onclick = function() {
+                    if(!this.classList.contains('open')) {
+                        this.classList.add('open');
+                        opened.add(idx);
+                        if(opened.size === 3) {
                             const btn = document.getElementById('p6-btn');
-                            btn.classList.add('reveal-element');
+                            btn.classList.remove('hidden');
+                            btn.classList.add('reveal');
+                            btn.style.opacity = 1;
                         }
+                    } else {
+                        this.classList.remove('open');
                     }
                 };
-
-                // Close Logic
-                const closeBtn = env.querySelector('.close-env');
-                closeBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    env.classList.remove('open');
-                };
-
-                container.appendChild(env);
+                wrapper.appendChild(el);
             });
 
             document.getElementById('p6-btn').onclick = () => {
-                fadeVolume(0.45, 2000); 
-                saveState(7);
-                renderPage();
+                fadeMusicUp();
+                savePage(7);
+                render();
             };
         }
 
-        /* PAGE 7: LETTER */
-        function renderPage7() {
+        /* --- PAGE 7: LETTER (UPDATED CONTENT) --- */
+        function page7() {
             app.innerHTML = `
-                <div class="letter-scroll reveal-element">
-                    <p>We only met yesterday…<br>and still I ended up building something like this for you.<br>I wouldn’t spend this kind of effort on just anyone.</p>
-                    <p>But you are different, K 🖤</p>
-                    <p>Maybe it’s an infatuation… maybe something quieter than that.<br>All I know is you feel like comfort.<br>A pause from the rough edges of life.<br>The kind of presence that makes the world go silent for a moment.</p>
-                    <p>You have that rare pull…<br>the kind people don’t fully understand, but still move toward ✨</p>
-                    <p>Beautiful, a little dangerous… a strange mix that stays in my head longer than it should.<br>You filled a space I didn’t even notice was empty.</p>
-                    <p>It’s early, I know.<br>But I don’t like pretending my feelings are smaller than they are.<br>People come and go, that’s normal…<br>yet you don’t feel temporary to me.</p>
-                    <p>You feel… claimed.</p>
-                    <p>Not trapped, not forced.<br>Chosen.</p>
-                    <p>I’m not usually possessive, but with you something shifts.<br>I don’t want distance.<br>I don’t want to be casual.</p>
-                    <p>Stay close 🤍</p>
-                    <p>Think of it like a leash you don’t resist…<br>because it feels warmer than freedom.<br>Something you reach for, not escape from.</p>
-                    <p>I’ll make it gentle enough that you won’t want to leave…<br>and strong enough that you won’t need to 🔒</p>
-                    <p>I think that’s enough for tonight, sweetheart.</p>
-                    <div class="signature">~ R / Flash</div>
-                    <div style="height: 50px;"></div>
+                <div class="letter-box reveal">
+                    <p>We just met yesterday, and I am already creating this site for you… I would not have given this amount of effort to anyone else.</p>
+                    <p>But you… you are special, K.</p>
+                    <p>I am having an infatuation with you. You are a comfort for me that helps me escape the roughness of my life. You are the kind of girl men would go to war for.</p>
+                    <p>You are magical, a combination of beauty and the beast. You made me feel complete and filled a gap that existed in my life.</p>
+                    <p>You are a valuable person to me. Although it’s too early to say this, I don’t believe in hiding my emotions from myself. I have met many people, and even if they leave, it’s completely fine… but that’s not the case with you. You are mine.</p>
+                    <p>You are my property. Although I am not a possessive type of guy, I am still very possessive about you, and I am not going to let you go.</p>
+                    <p>You have a neck leash, and I am not going to free you from it… I will make this leash so addictive for you that you won’t feel in control without it.</p>
+                    <p>I guess that’s it, sweetheart.</p>
+                    <div class="sig">~ R or Flash (whatever you like)</div>
+                    <br>
                 </div>
-                <button id="p7-btn" class="reveal-element delay-3">Continue</button>
+                <button id="p7-btn" class="reveal delay-2">Continue</button>
             `;
-
-            document.getElementById('p7-btn').onclick = () => {
-                saveState(8);
-                renderPage();
-            };
+            document.getElementById('p7-btn').onclick = () => { savePage(8); render(); };
         }
 
-        /* PAGE 8: VALENTINE */
-        function renderPage8() {
-            app.id = "page-8"; // Activate gradient background
+        /* --- PAGE 8: VALENTINE (END) --- */
+        function page8() {
             app.innerHTML = `
-                <h1 class="script-text reveal-element" style="font-size:3rem;">Happy Valentine’s Day, K ❤️</h1>
-                <p class="reveal-element delay-2" style="margin-top:2rem;">You’re not here because I control you</p>
-                <p class="reveal-element delay-3">You’re here because you trust me</p>
+                <div class="val-title reveal">Happy Valentine’s Day, K ❤️</div>
+                <p class="reveal delay-1">You’re not here because I control you.</p>
+                <p class="reveal delay-2">You’re here because you trust me.</p>
             `;
-
-            // Particles
-            for(let i=0; i<30; i++) {
-                let p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.top = '100%';
-                p.style.animation = `float ${5 + Math.random() * 5}s linear infinite`;
-                p.style.animationDelay = Math.random() * 5 + 's';
-                app.appendChild(p);
-            }
-
-            setTimeout(() => {
-                app.innerHTML = ''; // Fade out page 8
-                saveState(9);
-                renderPage();
-            }, 8000);
         }
 
-        /* FINAL PAGE */
-        function renderFinal() {
-            app.innerHTML = `<div class="stay-word reveal-element">Stay.</div>`;
-        }
-
-        /* INIT */
-        window.onload = () => {
-            renderPage();
-            // Try to start music on first click anywhere if strictly blocked
-            document.body.addEventListener('click', startMusic, {once:true});
-        };
+        // Init
+        window.onload = render;
 
     </script>
 </body>
