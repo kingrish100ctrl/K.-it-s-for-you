@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For K</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* -----------------------------------------------------------
+           RESET & GLOBAL VARIABLES
+        ----------------------------------------------------------- */
+        :root {
+            --bg: #0B0B0F;
+            --bg-sec: #14141B;
+            --accent: #8B1E3F;
+            --accent-soft: #C44569;
+            --text-main: #E8E6EA;
+            --text-faded: #9A98A3;
+            --glow: rgba(196, 69, 105, 0.35);
+            --font-head: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Great Vibes', cursive;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden; /* No scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* -----------------------------------------------------------
+           ANIMATIONS
+        ----------------------------------------------------------- */
+        @keyframes breathe {
+            0% { background-color: #0B0B0F; }
+            50% { background-color: #121216; }
+            100% { background-color: #0B0B0F; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px var(--glow); transform: scale(1); }
+            50% { box-shadow: 0 0 25px var(--accent-soft); transform: scale(1.02); }
+            100% { box-shadow: 0 0 10px var(--glow); transform: scale(1); }
+        }
+        @keyframes textPulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); text-shadow: 0 0 15px var(--glow); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        body {
+            animation: breathe 8s infinite ease-in-out;
+        }
+
+        /* -----------------------------------------------------------
+           LAYOUT & TYPOGRAPHY
+        ----------------------------------------------------------- */
+        #app {
+            width: 100%;
+            max-width: 760px;
+            height: 100%;
+            position: relative;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-head);
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-faded);
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .script-text {
+            font-family: var(--font-script);
+            font-size: 2.2rem;
+            color: var(--accent-soft);
+            margin: 1rem 0;
+            line-height: 1.2;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* Utility for fade entrances */
+        .reveal-element {
+            opacity: 0;
+            animation: fadeIn 0.9s ease-out forwards;
+        }
+
+        /* Page 4 Specific Animation Line */
+        .p4-line {
+            opacity: 0;
+            margin-bottom: 2rem;
+            /* Combines Fade In (immediate) and Pulse (starts after 1s) */
+            animation: fadeIn 1s ease-out forwards, textPulse 3s infinite 1s;
+        }
+        
+        .delay-1 { animation-delay: 0.3s; }
+        .delay-2 { animation-delay: 0.8s; }
+        .delay-3 { animation-delay: 1.5s; }
+
+        /* -----------------------------------------------------------
+           UI COMPONENTS
+        ----------------------------------------------------------- */
+        button {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--text-main);
+            padding: 14px 28px;
+            font-family: var(--font-head);
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-top: 2rem;
+            border-radius: 2px;
+            opacity: 1;
+        }
+
+        button:hover, button:active {
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--text-faded);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            font-size: 1.2rem;
+            padding: 10px;
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+            outline: none;
+            margin-bottom: 2rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus { border-bottom-color: var(--accent-soft); }
+        .error { animation: shake 0.5s ease-in-out; border-bottom-color: red !important; }
+
+        /* -----------------------------------------------------------
+           PAGE SPECIFIC STYLES
+        ----------------------------------------------------------- */
+        /* Page 1: Entry */
+        #page-1 { text-align: center; }
+
+        /* Page 2: Progress */
+        .progress-container {
+            width: 100%;
+            max-width: 300px;
+            height: 2px;
+            background: var(--bg-sec);
+            margin: 2rem auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-bar {
+            position: absolute;
+            left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--accent-soft);
+            transition: width 4s ease-in-out;
+        }
+
+        /* Page 3: List */
+        .card-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            align-items: center;
+            max-height: 60vh;
+            overflow-y: auto; 
+            scrollbar-width: none; 
+            padding-bottom: 10px;
+            padding-top: 10px; 
+        }
+        .card-stack::-webkit-scrollbar { display: none; }
+        
+        .list-item {
+            background: var(--bg-sec);
+            padding: 1.2rem;
+            border-left: 2px solid var(--accent);
+            width: 100%;
+            text-align: left;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+            display: none; 
+        }
+        .list-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        /* Page 4: Claim */
+        #page-4 { background: #050507; transition: background 2s; }
+        .heartbeat-text {
+            /* Kept for reference but not used on p4 text anymore to avoid conflict */
+            animation: pulseGlow 1.5s infinite;
+        }
+
+        /* Page 6: Envelopes */
+        .envelope-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+        .envelope {
+            background: var(--bg-sec);
+            border: 1px solid var(--text-faded);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .envelope:hover { border-color: var(--accent); }
+        .envelope.open {
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            padding: 2rem;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        .envelope-content { display: none; text-align: left; margin-top: 1rem;}
+        .envelope.open .envelope-content { display: block; animation: fadeIn 1s; }
+        .envelope-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .envelope.open .envelope-icon { display: none; }
+
+        /* Page 7: Letter */
+        .letter-scroll {
+            width: 100%;
+            height: 60vh;
+            overflow-y: scroll;
+            background: rgba(255,255,255,0.03);
+            padding: 2rem;
+            text-align: left;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            scrollbar-width: none;
+        }
+        .letter-scroll::-webkit-scrollbar { display: none; }
+        .signature {
+            text-align: right;
+            font-family: var(--font-script);
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin-top: 2rem;
+        }
+
+        /* Page 8: Valentine */
+        #page-8 {
+            background: radial-gradient(circle at center, #1a050a 0%, #0B0B0F 100%);
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-soft);
+            border-radius: 50%;
+        }
+
+        /* Final Page */
+        .stay-word {
+            font-family: var(--font-head);
+            font-size: 3rem;
+            letter-spacing: 0.2em;
+            color: var(--text-main);
+            animation: pulseGlow 3s infinite;
+        }
+
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="app">
+        <!-- Content injected by JS -->
+    </div>
+
+    <script>
+        /* -----------------------------------------------------------
+           DATA & CONFIG
+        ----------------------------------------------------------- */
+        const VALID_PASSWORDS = ['rishi', 'flash', 'flash133566'];
+        
+        const TEXT_CARDS = [
+            "Your soft, adorable voice… it lingers even after you stop speaking",
+            "The way your body quietly reacts when I guide you 🙇‍♀️",
+            "Your sweetness in obeying even the smallest requests 😚",
+            "You feel like a breath of fresh air in a noisy world 🍃",
+            "You make me laugh 😂",
+            "The warmth and softness of Your boobies 😋... impossible to ignore 🤍",
+            "Your constant need for closeness and cuddles 🫂💗",
+            "Your first asshole fuck story 😅",
+            "How easy it is to talk to you… I could stay there forever ✨",
+            "Your surrender… every “yes, sir” carries trust, and I feel it 🖤"
+        ];
+
+        const CLAIM_LINES = [
+            "You don’t lose control.",
+            "You place it in my hands.",
+            "And I never drop it."
+        ];
+
+        /* -----------------------------------------------------------
+           STATE MANAGEMENT
+        ----------------------------------------------------------- */
+        let savedPage = parseInt(localStorage.getItem('story_page'));
+        
+        // Safety check: if savedPage is NaN or invalid, reset to 1
+        if (isNaN(savedPage) || savedPage < 1 || savedPage > 9) {
+            savedPage = 1;
+            localStorage.setItem('story_page', 1);
+        }
+
+        let state = {
+            page: savedPage,
+            musicStarted: false
+        };
+
+        const app = document.getElementById('app');
+        const audio = document.getElementById('bg-music');
+        audio.volume = 0.3;
+
+        // Save progress helper
+        function saveState(pageNum) {
+            state.page = pageNum;
+            localStorage.setItem('story_page', pageNum);
+        }
+
+        // Music Fade In Helper
+        function startMusic() {
+            if (state.musicStarted) return;
+            state.musicStarted = true;
+            audio.play().catch(e => console.log("Audio waiting for interaction"));
+        }
+
+        function fadeVolume(target, duration) {
+            const step = 0.01;
+            const intervalTime = duration * step;
+            const interval = setInterval(() => {
+                if (audio.volume < target) {
+                    audio.volume = Math.min(target, audio.volume + step);
+                } else if (audio.volume > target) {
+                    audio.volume = Math.max(target, audio.volume - step);
+                } else {
+                    clearInterval(interval);
+                }
+            }, 50);
+        }
+
+        /* -----------------------------------------------------------
+           RENDER ENGINE
+        ----------------------------------------------------------- */
+        function renderPage() {
+            app.innerHTML = ''; // Clear current content
+            app.className = ''; // Clear page specific classes
+
+            switch(state.page) {
+                case 1: renderPage1(); break;
+                case 2: renderPage2(); break;
+                case 3: renderPage3(); break;
+                case 4: renderPage4(); break;
+                case 5: renderPage5(); break;
+                case 6: renderPage6(); break;
+                case 7: renderPage7(); break;
+                case 8: renderPage8(); break;
+                case 9: renderFinal(); break;
+                default: renderPage1();
+            }
+        }
+
+        /* PAGE 1: ENTRY RITUAL */
+        function renderPage1() {
+            app.innerHTML = `
+                <div id="p1-content" style="opacity:0; transition: opacity 2s;">
+                    <p class="reveal-element">You are not meant to enter here casually.</p>
+                    <button id="ask-perm-btn" class="reveal-element delay-3">Ask permission</button>
+                    <div id="input-area" class="hidden" style="margin-top: 2rem;">
+                        <p class="reveal-element">Who do you belong to?</p>
+                        <input type="text" id="password-input" autocomplete="off" />
+                        <br/>
+                        <button id="submit-pass" style="margin-top:0;">Enter</button>
+                    </div>
+                </div>
+            `;
+
+            // Initial Delay
+            setTimeout(() => { 
+                const content = document.getElementById('p1-content');
+                if(content) content.style.opacity = 1; 
+            }, 800);
+
+            document.getElementById('ask-perm-btn').addEventListener('click', (e) => {
+                startMusic();
+                e.target.style.display = 'none';
+                const area = document.getElementById('input-area');
+                area.classList.remove('hidden');
+                // Ensure text inside fades in
+                area.querySelectorAll('p').forEach(el => el.classList.add('reveal-element'));
+            });
+
+            document.getElementById('submit-pass').addEventListener('click', checkPassword);
+        }
+
+        function checkPassword() {
+            const input = document.getElementById('password-input');
+            const val = input.value.trim().toLowerCase();
+            
+            if (VALID_PASSWORDS.includes(val)) {
+                // Success
+                document.getElementById('p1-content').style.opacity = 0.4;
+                app.innerHTML += `<p class="reveal-element" style="position:absolute; bottom: 20%;">...thinking</p>`;
+                
+                setTimeout(() => {
+                    app.innerHTML = `<h1 class="reveal-element">Come in.</h1>`;
+                    setTimeout(() => {
+                        saveState(2);
+                        renderPage();
+                    }, 2500);
+                }, 3000);
+            } else {
+                // Fail
+                input.classList.add('error');
+                const btn = document.getElementById('submit-pass');
+                const originalText = btn.innerText;
+                btn.innerText = "The door stays closed.";
+                setTimeout(() => {
+                    input.classList.remove('error');
+                    btn.innerText = originalText;
+                    input.value = '';
+                }, 2000);
+            }
+        }
+
+        /* PAGE 2: THE PAUSE */
+        function renderPage2() {
+            app.innerHTML = `
+                <p class="reveal-element">Don’t rush.</p>
+                <p class="reveal-element delay-1">Just stay here for a moment.</p>
+                <div class="progress-container reveal-element delay-2">
+                    <div class="progress-bar" id="p2-bar"></div>
+                </div>
+                <button id="p2-btn" class="hidden">Continue if you trust me</button>
+            `;
+
+            setTimeout(() => {
+                const bar = document.getElementById('p2-bar');
+                if(bar) bar.style.width = '100%';
+            }, 1000);
+
+            setTimeout(() => {
+                const btn = document.getElementById('p2-btn');
+                if(btn) {
+                    btn.classList.remove('hidden');
+                    btn.classList.add('reveal-element');
+                    btn.onclick = () => {
+                        saveState(3);
+                        renderPage();
+                    };
+                }
+            }, 5000);
+        }
+
+        /* PAGE 3: 10 THINGS (FIXED) */
+        function renderPage3() {
+            app.innerHTML = `
+                <h2 class="reveal-element">The 10 things I like about you</h2>
+                <div class="card-stack" id="card-stack"></div>
+                <div id="tap-hint" style="margin-top: 2rem; color: var(--text-faded); font-size: 0.8rem; opacity: 0.5;">(Tap to reveal)</div>
+                <button id="p3-btn" class="hidden">Come closer</button>
+            `;
+
+            let cardIndex = 0;
+            const container = document.getElementById('card-stack');
+
+            // Global click handler for this page
+            function revealNextCard(e) {
+                // Prevent triggering if clicking the final button itself
+                if (e.target.id === 'p3-btn') return;
+
+                // Remove hint on first click
+                const hint = document.getElementById('tap-hint');
+                if(hint) hint.style.display = 'none';
+
+                if (cardIndex < TEXT_CARDS.length) {
+                    const div = document.createElement('div');
+                    div.className = 'list-item visible';
+                    div.innerText = TEXT_CARDS[cardIndex];
+                    container.appendChild(div);
+                    div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    cardIndex++;
+                    
+                    if (cardIndex === TEXT_CARDS.length) {
+                        // All cards revealed
+                        setTimeout(() => {
+                            const btn = document.getElementById('p3-btn');
+                            btn.classList.remove('hidden');
+                            
+                            // Important: Use explicit class for visibility + animation
+                            btn.classList.add('reveal-element'); 
+                            
+                            // Force animation with 'forwards' to ensure it stays visible
+                            btn.style.animation = "fadeIn 1s ease-out forwards, pulseGlow 2s infinite"; 
+                            
+                            // Cleanup listener
+                            document.body.removeEventListener('click', revealNextCard);
+                            
+                            btn.onclick = () => {
+                                saveState(4);
+                                renderPage();
+                            };
+                        }, 500); // reduced delay for snappier feel
+                    }
+                }
+            }
+            
+            // Initial delay before taps work
+            setTimeout(() => {
+                document.body.addEventListener('click', revealNextCard);
+            }, 1000);
+        }
+
+        /* PAGE 4: CLAIM (FIXED - VISIBILITY) */
+        function renderPage4() {
+            app.style.backgroundColor = "#050507";
+            app.innerHTML = `
+                <div id="p4-lines"></div>
+                <button id="p4-btn" class="hidden">Keep reading</button>
+            `;
+
+            let index = 0;
+            const container = document.getElementById('p4-lines');
+
+            function showLine() {
+                // Safety check if user left page
+                if(!document.getElementById('p4-lines')) return;
+
+                if (index < CLAIM_LINES.length) {
+                    const p = document.createElement('h2');
+                    // FIX: Use dedicated class .p4-line to avoid animation conflict
+                    p.className = 'p4-line'; 
+                    p.innerText = CLAIM_LINES[index];
+                    container.appendChild(p);
+                    index++;
+                    setTimeout(showLine, 2500); 
+                } else {
+                    const btn = document.getElementById('p4-btn');
+                    btn.classList.remove('hidden');
+                    btn.classList.add('reveal-element');
+                    btn.onclick = () => {
+                        saveState(5);
+                        renderPage();
+                    };
+                }
+            }
+            setTimeout(showLine, 1000);
+        }
+
+        /* PAGE 5: PRIVATE / TIMED */
+        function renderPage5() {
+            app.innerHTML = `<div id="p5-text" class="reveal-element"></div>`;
+            const textEl = document.getElementById('p5-text');
+
+            const seq = [
+                { text: "Put your phone down for five seconds", wait: 5000 },
+                { text: "Take one slow breath", wait: 4000 },
+                { text: "Now read the next line", wait: 2000 },
+                { text: "Good.", wait: 1000 }
+            ];
+
+            let step = 0;
+            
+            function runSeq() {
+                // Safety check
+                if(!document.getElementById('p5-text')) return;
+
+                if (step < seq.length) {
+                    textEl.style.opacity = 0;
+                    setTimeout(() => {
+                        if(!textEl) return;
+                        textEl.innerHTML = `<h2>${seq[step].text}</h2>`;
+                        textEl.style.opacity = 1;
+                        setTimeout(() => {
+                            step++;
+                            runSeq();
+                        }, seq[step].wait);
+                    }, 1000);
+                } else {
+                    app.innerHTML += `<button id="p5-btn" class="reveal-element">I will listen</button>`;
+                    document.getElementById('p5-btn').onclick = () => {
+                        saveState(6);
+                        renderPage();
+                    };
+                }
+            }
+            runSeq();
+        }
+
+        /* PAGE 6: ENVELOPES (ROBUST FIX) */
+        function renderPage6() {
+            app.innerHTML = `
+                <div class="envelope-container" id="env-cont">
+                    <!-- Envelopes injected here -->
+                </div>
+                <div id="p6-footer" class="hidden" style="margin-top:2rem;">
+                    <p class="reveal-element" style="color:var(--accent-soft)">Good girl.</p>
+                    <button id="p6-btn">Stay with me</button>
+                </div>
+            `;
+
+            const contents = [
+                {
+                    title: "Envelope 1",
+                    body: "You spend so much time holding yourself together.<br>Choosing the right words… reacting the right way… pretending you’re more composed than you really feel.<br><br>You don’t need that here.<br>Here you can slow down, breathe, and let me hold the moment for you.<br>I’m not going anywhere."
+                },
+                {
+                    title: "Envelope 2",
+                    body: "Look at you… following every line properly.<br>Such a well behaved girl.<br>Makes me wonder how long that innocence lasts when I start pushing a little more."
+                },
+                {
+                    title: "Envelope 3",
+                    body: "Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home, heart pounding with anticipation. The door clicks open, and there you are, my sweet girl, positioned perfectly for your Master. Your eyes lift slowly to meet mine, locking in that intense gaze for a lingering moment, full of devotion and desire. Then, as a good sub should, you lower them submissively, casting your lashes down to the floor, exposing the curve of your neck like an offering.<br><br>My very first words are \"Look at you, my little slut, so eager and ready for Master\" and then..........."
+                }
+            ];
+
+            const container = document.getElementById('env-cont');
+            const openedIndices = new Set();
+
+            contents.forEach((content, idx) => {
+                const env = document.createElement('div');
+                env.className = 'envelope reveal-element';
+                env.style.animationDelay = `${idx * 0.2}s`;
+                env.innerHTML = `
+                    <span class="envelope-icon">✉️</span>
+                    <h3 style="margin:0">Open Me</h3>
+                    <div class="envelope-content">
+                        <p>${content.body}</p>
+                        <button class="close-env" style="margin-top:1rem; font-size:0.8rem; padding: 10px;">Close</button>
+                    </div>
+                `;
+
+                // Open Logic
+                env.onclick = (e) => {
+                    if (e.target.classList.contains('close-env')) return;
+                    if (!env.classList.contains('open')) {
+                        env.classList.add('open');
+                        openedIndices.add(idx); 
+                        
+                        if (openedIndices.size === 3) {
+                            const footer = document.getElementById('p6-footer');
+                            footer.classList.remove('hidden');
+                            
+                            // Ensure button is visible
+                            const btn = document.getElementById('p6-btn');
+                            btn.classList.add('reveal-element');
+                        }
+                    }
+                };
+
+                // Close Logic
+                const closeBtn = env.querySelector('.close-env');
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    env.classList.remove('open');
+                };
+
+                container.appendChild(env);
+            });
+
+            document.getElementById('p6-btn').onclick = () => {
+                fadeVolume(0.45, 2000); 
+                saveState(7);
+                renderPage();
+            };
+        }
+
+        /* PAGE 7: LETTER */
+        function renderPage7() {
+            app.innerHTML = `
+                <div class="letter-scroll reveal-element">
+                    <p>We only met yesterday…<br>and still I ended up building something like this for you.<br>I wouldn’t spend this kind of effort on just anyone.</p>
+                    <p>But you are different, K 🖤</p>
+                    <p>Maybe it’s an infatuation… maybe something quieter than that.<br>All I know is you feel like comfort.<br>A pause from the rough edges of life.<br>The kind of presence that makes the world go silent for a moment.</p>
+                    <p>You have that rare pull…<br>the kind people don’t fully understand, but still move toward ✨</p>
+                    <p>Beautiful, a little dangerous… a strange mix that stays in my head longer than it should.<br>You filled a space I didn’t even notice was empty.</p>
+                    <p>It’s early, I know.<br>But I don’t like pretending my feelings are smaller than they are.<br>People come and go, that’s normal…<br>yet you don’t feel temporary to me.</p>
+                    <p>You feel… claimed.</p>
+                    <p>Not trapped, not forced.<br>Chosen.</p>
+                    <p>I’m not usually possessive, but with you something shifts.<br>I don’t want distance.<br>I don’t want to be casual.</p>
+                    <p>Stay close 🤍</p>
+                    <p>Think of it like a leash you don’t resist…<br>because it feels warmer than freedom.<br>Something you reach for, not escape from.</p>
+                    <p>I’ll make it gentle enough that you won’t want to leave…<br>and strong enough that you won’t need to 🔒</p>
+                    <p>I think that’s enough for tonight, sweetheart.</p>
+                    <div class="signature">~ R / Flash</div>
+                    <div style="height: 50px;"></div>
+                </div>
+                <button id="p7-btn" class="reveal-element delay-3">Continue</button>
+            `;
+
+            document.getElementById('p7-btn').onclick = () => {
+                saveState(8);
+                renderPage();
+            };
+        }
+
+        /* PAGE 8: VALENTINE */
+        function renderPage8() {
+            app.id = "page-8"; // Activate gradient background
+            app.innerHTML = `
+                <h1 class="script-text reveal-element" style="font-size:3rem;">Happy Valentine’s Day, K ❤️</h1>
+                <p class="reveal-element delay-2" style="margin-top:2rem;">You’re not here because I control you</p>
+                <p class="reveal-element delay-3">You’re here because you trust me</p>
+            `;
+
+            // Particles
+            for(let i=0; i<30; i++) {
+                let p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = '100%';
+                p.style.animation = `float ${5 + Math.random() * 5}s linear infinite`;
+                p.style.animationDelay = Math.random() * 5 + 's';
+                app.appendChild(p);
+            }
+
+            setTimeout(() => {
+                app.innerHTML = ''; // Fade out page 8
+                saveState(9);
+                renderPage();
+            }, 8000);
+        }
+
+        /* FINAL PAGE */
+        function renderFinal() {
+            app.innerHTML = `<div class="stay-word reveal-element">Stay.</div>`;
+        }
+
+        /* INIT */
+        window.onload = () => {
+            renderPage();
+            // Try to start music on first click anywhere if strictly blocked
+            document.body.addEventListener('click', startMusic, {once:true});
+        };
+
+    </script>
+</body>
+</html>
