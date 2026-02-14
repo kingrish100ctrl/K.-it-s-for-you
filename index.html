@@ -1,0 +1,480 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+const ValentineStory = () => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [inputValue, setInputValue] = useState('');
+  const [showInput, setShowInput] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [thinking, setThinking] = useState(false);
+  const [progressTimer, setProgressTimer] = useState(0);
+  const [visibleCards, setVisibleCards] = useState(0);
+  const [visibleLines, setVisibleLines] = useState(0);
+  const [canAdvance, setCanAdvance] = useState(false);
+  const [visibleEnvelopes, setVisibleEnvelopes] = useState([]);
+  const [showGoodGirl, setShowGoodGirl] = useState(false);
+
+  // Load progress from localStorage
+  useEffect(() => {
+    const savedPage = localStorage.getItem('valentine-progress');
+    if (savedPage) {
+      setCurrentPage(parseInt(savedPage, 10));
+    }
+  }, []);
+
+  // Save progress to localStorage
+  useEffect(() => {
+    localStorage.setItem('valentine-progress', currentPage.toString());
+  }, [currentPage]);
+
+  // Page 0: Entry ritual timing
+  useEffect(() => {
+    if (currentPage === 0) {
+      setTimeout(() => setCanAdvance(true), 800);
+    }
+  }, [currentPage]);
+
+  // Page 2: Progress bar
+  useEffect(() => {
+    if (currentPage === 2) {
+      setProgressTimer(0);
+      setCanAdvance(false);
+      const interval = setInterval(() => {
+        setProgressTimer(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setCanAdvance(true);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [currentPage]);
+
+  // Page 3: Card reveals
+  useEffect(() => {
+    if (currentPage === 3) {
+      setVisibleCards(0);
+      setCanAdvance(true);
+    }
+  }, [currentPage]);
+
+  // Page 4: Line reveals
+  useEffect(() => {
+    if (currentPage === 4) {
+      setVisibleLines(0);
+      setCanAdvance(false);
+      setTimeout(() => setVisibleLines(1), 300);
+      setTimeout(() => setVisibleLines(2), 1200);
+      setTimeout(() => setVisibleLines(3), 2100);
+      setTimeout(() => setCanAdvance(true), 2500);
+    }
+  }, [currentPage]);
+
+  // Page 5: Timed reading
+  useEffect(() => {
+    if (currentPage === 5) {
+      setVisibleLines(0);
+      setCanAdvance(false);
+      setTimeout(() => setVisibleLines(1), 500);
+      setTimeout(() => setVisibleLines(2), 5500);
+      setTimeout(() => setVisibleLines(3), 9500);
+      setTimeout(() => setVisibleLines(4), 10500);
+      setTimeout(() => setCanAdvance(true), 11000);
+    }
+  }, [currentPage]);
+
+  // Page 6: Envelope reveals
+  useEffect(() => {
+    if (currentPage === 6) {
+      setVisibleEnvelopes([]);
+      setShowGoodGirl(false);
+      setCanAdvance(true);
+    }
+  }, [currentPage]);
+
+  const handlePasswordSubmit = () => {
+    const correctAnswers = ['rishi', 'flash', 'flash133566'];
+    if (correctAnswers.includes(inputValue.toLowerCase().trim())) {
+      setThinking(true);
+      setTimeout(() => {
+        setCurrentPage(1);
+        setThinking(false);
+        setShowInput(false);
+      }, 3000);
+    } else {
+      setShowError(true);
+      setTimeout(() => setShowError(false), 1000);
+    }
+  };
+
+  const handleCardTap = () => {
+    if (visibleCards < 10) {
+      setVisibleCards(prev => prev + 1);
+    }
+  };
+
+  const toggleEnvelope = (index) => {
+    if (visibleEnvelopes.includes(index)) {
+      setVisibleEnvelopes(prev => prev.filter(i => i !== index));
+    } else {
+      setVisibleEnvelopes(prev => [...prev, index]);
+      if (visibleEnvelopes.length === 2 && !visibleEnvelopes.includes(index)) {
+        setTimeout(() => setShowGoodGirl(true), 500);
+      }
+    }
+  };
+
+  const cards = [
+    "Your soft, adorable voice… it lingers even after you stop speaking",
+    "The way your body quietly reacts when I guide you 🙇‍♀️",
+    "Your sweetness in obeying even the smallest requests 😚",
+    "You feel like a breath of fresh air in a noisy world 🍃",
+    "You make me laugh 😂",
+    "The warmth and softness of Your boobies 😋... impossible to ignore 🤍",
+    "Your constant need for closeness and cuddles 🫂💗",
+    "Your first asshole fuck story 😅",
+    "How easy it is to talk to you… I could stay there forever ✨",
+    "Your surrender… every \"yes, sir\" carries trust, and I feel it 🖤"
+  ];
+
+  const envelopeContents = [
+    "You spend so much time holding yourself together.\nChoosing the right words… reacting the right way… pretending you're more composed than you really feel.\nYou don't need that here.\nHere you can slow down, breathe, and let me hold the moment for you.\nI'm not going anywhere.",
+    "Look at you… following every line properly.\nSuch a well behaved girl.\nMakes me wonder how long that innocence lasts when I start pushing a little more.",
+    "Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home, heart pounding with anticipation. The door clicks open, and there you are, my sweet girl, positioned perfectly for your Master. Your eyes lift slowly to meet mine, locking in that intense gaze for a lingering moment, full of devotion and desire. Then, as a good sub should, you lower them submissively, casting your lashes down to the floor, exposing the curve of your neck like an offering.\n\nMy very first words are \"Look at you, my little slut, so eager and ready for Master\" and then........."
+  ];
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#0B0B0F] via-[#14141B] to-[#0B0B0F] animate-breathe">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap');
+        
+        @keyframes breathe {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-10px); }
+          75% { transform: translateX(10px); }
+        }
+        
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(196, 69, 105, 0.35), 0 0 40px rgba(196, 69, 105, 0.2); }
+          50% { box-shadow: 0 0 30px rgba(196, 69, 105, 0.5), 0 0 60px rgba(196, 69, 105, 0.3); }
+        }
+        
+        .animate-breathe { 
+          background-size: 200% 200%;
+          animation: breathe 8s ease-in-out infinite;
+        }
+        
+        .animate-fade-in { animation: fadeIn 900ms ease-out; }
+        .animate-fade-up { animation: fadeUp 900ms ease-out; }
+        .animate-shake { animation: shake 0.5s; }
+        .animate-glow { animation: glowPulse 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* Page 0: Entry */}
+      {currentPage === 0 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          {canAdvance && (
+            <>
+              <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+                You are not meant to enter here casually.
+              </p>
+              {!showInput && (
+                <button 
+                  className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+                  style={{fontFamily: "'Inter', sans-serif", animationDelay: '2s', animationFillMode: 'backwards'}}
+                  onClick={() => setShowInput(true)}
+                >
+                  Ask permission
+                </button>
+              )}
+              {showInput && !thinking && (
+                <div className="mt-8 animate-fade-up">
+                  <p className="text-xl text-[#9A98A3] mb-2" style={{fontFamily: "'Inter', sans-serif"}}>
+                    Who do you belong to?
+                  </p>
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                    className={`w-full max-w-md px-4 py-3 text-xl bg-[#14141B] text-[#E8E6EA] border-2 border-[#8B1E3F] rounded outline-none text-center mt-4 ${showError ? 'animate-shake' : ''}`}
+                    style={{fontFamily: "'Inter', sans-serif"}}
+                    autoFocus
+                  />
+                  {showError && <p className="text-[#C44569] mt-4 text-base">The door stays closed.</p>}
+                </div>
+              )}
+              {thinking && (
+                <div className="mt-8 opacity-40 animate-fade-in">
+                  <p className="text-xl text-[#9A98A3] italic mb-4">...thinking</p>
+                  <p className="text-xl text-[#9A98A3] italic animate-fade-in" style={{animationDelay: '3s', animationFillMode: 'backwards'}}>
+                    Come in.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Page 1: Initial */}
+      {currentPage === 1 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+            You are not meant to enter here casually.
+          </p>
+          <button 
+            className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+            style={{fontFamily: "'Inter', sans-serif", animationDelay: '1s', animationFillMode: 'backwards'}}
+            onClick={() => setCurrentPage(2)}
+          >
+            Enter
+          </button>
+        </div>
+      )}
+
+      {/* Page 2: Pause */}
+      {currentPage === 2 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+            Don't rush.
+          </p>
+          <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif", animationDelay: '300ms', animationFillMode: 'backwards'}}>
+            Just stay here for a moment.
+          </p>
+          <div className="w-full max-w-lg h-1 bg-[#14141B] rounded mt-12 overflow-hidden">
+            <div className="h-full bg-[#C44569] transition-all duration-100" style={{width: `${progressTimer}%`}} />
+          </div>
+          {canAdvance && (
+            <button 
+              className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+              style={{fontFamily: "'Inter', sans-serif"}}
+              onClick={() => setCurrentPage(3)}
+            >
+              Continue if you trust me
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Page 3: Cards */}
+      {currentPage === 3 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen" onClick={handleCardTap}>
+          <h2 className="text-4xl md:text-5xl mb-12 text-[#E8E6EA] animate-fade-in" style={{fontFamily: "'Playfair Display', serif"}}>
+            The 10 things I like about you
+          </h2>
+          <div className="flex flex-col gap-6 w-full max-w-2xl">
+            {cards.slice(0, visibleCards).map((card, i) => (
+              <div 
+                key={i}
+                className="px-8 py-6 bg-[rgba(20,20,27,0.7)] border border-[rgba(139,30,63,0.3)] rounded-lg text-xl leading-relaxed text-[#E8E6EA] backdrop-blur-sm animate-fade-up"
+                style={{fontFamily: "'Inter', sans-serif"}}
+              >
+                {card}
+              </div>
+            ))}
+          </div>
+          {visibleCards === 10 && (
+            <button 
+              className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-glow"
+              style={{fontFamily: "'Inter', sans-serif"}}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentPage(4);
+              }}
+            >
+              Come closer
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Page 4: Claim */}
+      {currentPage === 4 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen bg-[#08080C]">
+          {visibleLines >= 1 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              You don't lose control.
+            </p>
+          )}
+          {visibleLines >= 2 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              You place it in my hands.
+            </p>
+          )}
+          {visibleLines >= 3 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              And I never drop it.
+            </p>
+          )}
+          {canAdvance && (
+            <button 
+              className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+              style={{fontFamily: "'Inter', sans-serif"}}
+              onClick={() => setCurrentPage(5)}
+            >
+              Keep reading
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Page 5: Private */}
+      {currentPage === 5 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          {visibleLines >= 1 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              Put your phone down for five seconds
+            </p>
+          )}
+          {visibleLines >= 2 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              Take one slow breath
+            </p>
+          )}
+          {visibleLines >= 3 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              Now read the next line
+            </p>
+          )}
+          {visibleLines >= 4 && (
+            <p className="text-2xl md:text-3xl leading-relaxed text-[#C44569] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+              Good.
+            </p>
+          )}
+          {canAdvance && (
+            <button 
+              className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+              style={{fontFamily: "'Inter', sans-serif"}}
+              onClick={() => setCurrentPage(6)}
+            >
+              I will listen
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Page 6: Envelopes */}
+      {currentPage === 6 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          <div className="flex flex-col gap-6 w-full max-w-3xl">
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="flex flex-col">
+                <button
+                  className="px-8 py-6 bg-[#8B1E3F] text-[#E8E6EA] rounded-lg text-xl cursor-pointer flex items-center justify-between hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+                  style={{fontFamily: "'Inter', sans-serif", animationDelay: `${index * 200}ms`, animationFillMode: 'backwards'}}
+                  onClick={() => toggleEnvelope(index)}
+                >
+                  Envelope {index + 1}
+                  <span className="ml-2">
+                    {visibleEnvelopes.includes(index) ? '▼' : '▶'}
+                  </span>
+                </button>
+                {visibleEnvelopes.includes(index) && (
+                  <div className="px-8 py-6 bg-[rgba(20,20,27,0.9)] border border-[rgba(139,30,63,0.3)] rounded-lg mt-4 text-lg leading-loose text-[#E8E6EA] whitespace-pre-line text-left animate-fade-in" style={{fontFamily: "'Inter', sans-serif"}}>
+                    {envelopeContents[index]}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {showGoodGirl && (
+            <p className="text-3xl text-[#C44569] mt-8 animate-glow" style={{fontFamily: "'Inter', sans-serif"}}>
+              Good girl.
+            </p>
+          )}
+          {visibleEnvelopes.length === 3 && (
+            <button 
+              className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+              style={{fontFamily: "'Inter', sans-serif"}}
+              onClick={() => setCurrentPage(7)}
+            >
+              Stay with me
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Page 7: Letter */}
+      {currentPage === 7 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          <div className="w-full max-w-3xl max-h-[70vh] overflow-y-auto px-8 py-8 bg-[rgba(20,20,27,0.6)] rounded-xl border border-[rgba(139,30,63,0.2)] backdrop-blur-sm">
+            <div className="text-lg leading-loose text-[#E8E6EA] text-left space-y-6" style={{fontFamily: "'Inter', sans-serif"}}>
+              <p>We only met yesterday…<br />and still I ended up building something like this for you.<br />I wouldn't spend this kind of effort on just anyone.</p>
+              <p>But you are different, K 🖤</p>
+              <p>Maybe it's an infatuation… maybe something quieter than that.<br />All I know is you feel like comfort.<br />A pause from the rough edges of life.<br />The kind of presence that makes the world go silent for a moment.</p>
+              <p>You have that rare pull…<br />the kind people don't fully understand, but still move toward ✨</p>
+              <p>Beautiful, a little dangerous… a strange mix that stays in my head longer than it should.<br />You filled a space I didn't even notice was empty.</p>
+              <p>It's early, I know.<br />But I don't like pretending my feelings are smaller than they are.<br />People come and go, that's normal…<br />yet you don't feel temporary to me.</p>
+              <p>You feel… claimed.</p>
+              <p>Not trapped, not forced.<br />Chosen.</p>
+              <p>I'm not usually possessive, but with you something shifts.<br />I don't want distance.<br />I don't want to be casual.</p>
+              <p>Stay close 🤍</p>
+              <p>Think of it like a leash you don't resist…<br />because it feels warmer than freedom.<br />Something you reach for, not escape from.</p>
+              <p>I'll make it gentle enough that you won't want to leave…<br />and strong enough that you won't need to 🔒</p>
+              <p>I think that's enough for tonight, sweetheart.</p>
+              <p className="italic mt-8">~ R / Flash</p>
+            </div>
+          </div>
+          <button 
+            className="mt-8 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300"
+            style={{fontFamily: "'Inter', sans-serif"}}
+            onClick={() => setCurrentPage(8)}
+          >
+            Continue
+          </button>
+        </div>
+      )}
+
+      {/* Page 8: Valentine */}
+      {currentPage === 8 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen bg-gradient-to-br from-[#1a0e14] to-[#2d1825]">
+          <h1 className="text-5xl md:text-6xl text-[#C44569] text-center animate-fade-in mb-12" style={{fontFamily: "'Great Vibes', cursive"}}>
+            Happy Valentine's Day, K ❤️
+          </h1>
+          <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif", animationDelay: '1s', animationFillMode: 'backwards'}}>
+            You're not here because I control you
+          </p>
+          <p className="text-2xl md:text-3xl leading-relaxed text-[#E8E6EA] mb-6 animate-fade-in" style={{fontFamily: "'Inter', sans-serif", animationDelay: '1.3s', animationFillMode: 'backwards'}}>
+            You're here because you trust me
+          </p>
+          <button 
+            className="mt-12 px-10 py-4 text-lg bg-[#8B1E3F] text-[#E8E6EA] rounded hover:bg-[#C44569] transition-all duration-300 animate-fade-in"
+            style={{fontFamily: "'Inter', sans-serif", animationDelay: '2s', animationFillMode: 'backwards'}}
+            onClick={() => setCurrentPage(9)}
+          >
+            Continue
+          </button>
+        </div>
+      )}
+
+      {/* Final Page */}
+      {currentPage === 9 && (
+        <div className="max-w-3xl w-11/12 px-8 py-12 flex flex-col items-center justify-center text-center min-h-screen">
+          <h1 className="text-6xl md:text-7xl text-[#C44569] text-center animate-fade-in" style={{fontFamily: "'Playfair Display', serif"}}>
+            Stay.
+          </h1>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ValentineStory;
