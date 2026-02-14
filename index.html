@@ -1,830 +1,690 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>For K ❤️</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Lock, Heart, Mail, Volume2, VolumeX, ChevronDown } from 'lucide-react';
+
+/**
+ * PROJECT: STARDUST VALENTINE
+ * DESCRIPTION: A dark, immersive, state-based interactive story.
+ * STACK: React, Tailwind CSS, Web Audio API (Fallback), LocalStorage.
+ */
+
+// --- DESIGN SYSTEM & ASSETS ---
+const COLORS = {
+  bgPrimary: '#0B0B0F',
+  bgSecondary: '#14141B',
+  accentMain: '#8B1E3F',
+  accentSoft: '#C44569',
+  textPrimary: '#E8E6EA',
+  textFaded: '#9A98A3',
+  glow: 'rgba(196, 69, 105, 0.35)',
+};
+
+const FONTS = {
+  heading: "'Playfair Display', serif",
+  body: "'Inter', sans-serif",
+  accent: "'Great Vibes', cursive",
+};
+
+// --- AUDIO ENGINE (HYBRID: FILE + SYNTH FALLBACK) ---
+class AudioController {
+  constructor() {
+    this.audio = new Audio('song.mp3');
+    this.audio.loop = true;
+    this.context = null;
+    this.oscillator = null;
+    this.gainNode = null;
+    this.isUsingSynth = false;
+    this.volume = 0.3;
+  }
+
+  async init() {
+    try {
+      // Try to play file
+      await this.audio.play();
+      this.audio.volume = this.volume;
+    } catch (e) {
+      console.warn("MP3 load failed or autoplay blocked. Switching to Synth fallback.");
+      this.isUsingSynth = true;
+      this.initSynth();
     }
+  }
 
-    body {
-      overflow: hidden;
-      font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+  initSynth() {
+    if (!window.AudioContext) return;
+    this.context = new (window.AudioContext || window.webkitAudioContext)();
+    this.oscillator = this.context.createOscillator();
+    this.gainNode = this.context.createGain();
+    
+    // Dark ambient drone
+    this.oscillator.type = 'sine';
+    this.oscillator.frequency.setValueAtTime(55, this.context.currentTime); // Low A
+    
+    // LFO for "breathing" sound
+    const lfo = this.context.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.1, this.context.currentTime);
+    const lfoGain = this.context.createGain();
+    lfoGain.gain.setValueAtTime(0.15, this.context.currentTime);
+    
+    lfo.connect(lfoGain);
+    lfoGain.connect(this.gainNode.gain);
+    
+    this.oscillator.connect(this.gainNode);
+    this.gainNode.connect(this.context.destination);
+    this.oscillator.start();
+    lfo.start();
+    
+    this.setVolume(this.volume);
+  }
+
+  setVolume(val) {
+    this.volume = val;
+    if (!this.isUsingSynth) {
+      this.audio.volume = Math.min(Math.max(val, 0), 1);
+    } else if (this.gainNode && this.context) {
+      // Synth is louder by default, scale it down
+      this.gainNode.gain.setTargetAtTime(val * 0.5, this.context.currentTime, 0.5);
     }
+  }
 
-    #root {
-      width: 100vw;
-      height: 100vh;
+  stop() {
+    this.audio.pause();
+    if (this.oscillator) {
+      this.oscillator.stop();
+      this.context.close();
     }
+  }
+}
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+// --- GLOBAL UTILS ---
+const STATE_KEY = 'interactive_story_progress';
+
+const saveProgress = (page, data = {}) => {
+  const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+  const newState = {
+    ...existing,
+    currentPage: page,
+    timestamp: new Date().toISOString(),
+    ...data
+  };
+  localStorage.setItem(STATE_KEY, JSON.stringify(newState));
+};
+
+const loadProgress = () => {
+  try {
+    const stored = localStorage.getItem(STATE_KEY);
+    return stored ? JSON.parse(stored) : { currentPage: 1, openedEnvelopes: [] };
+  } catch (e) {
+    return { currentPage: 1, openedEnvelopes: [] };
+  }
+};
+
+// --- COMPONENTS ---
+
+const FadeIn = ({ children, delay = 0, duration = 900, className = "" }) => (
+  <div 
+    className={`transition-all ease-out ${className}`}
+    style={{ 
+      animation: `fadeInUp ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards`,
+      animationDelay: `${delay}ms`,
+      opacity: 0,
+    }}
+  >
+    {children}
+  </div>
+);
+
+// --- PAGES ---
+
+// PAGE 1: ENTRY RITUAL
+const PageEntry = ({ onNext, startAudio }) => {
+  const [step, setStep] = useState(0);
+  const [input, setInput] = useState('');
+  const [shake, setShake] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [fadingOut, setFadingOut] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setStep(1), 800); // "Not meant to enter..."
+    setTimeout(() => setStep(2), 2800); // Button
+  }, []);
+
+  const handleAsk = () => {
+    startAudio();
+    setStep(3); // Input reveal
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const valid = ['rishi', 'flash', 'flash133566'];
+    if (valid.includes(input.trim().toLowerCase())) {
+      setFadingOut(true);
+      setTimeout(() => setStep(4), 1500); // Thinking...
+      setTimeout(() => setStep(5), 3500); // Come in.
+      setTimeout(onNext, 5500);
+    } else {
+      setShake(true);
+      setErrorMsg("The door stays closed.");
+      setTimeout(() => setShake(false), 500);
     }
+  };
 
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+  return (
+    <div className={`flex flex-col items-center justify-center h-full w-full transition-opacity duration-1000 ${fadingOut && step < 4 ? 'opacity-40' : 'opacity-100'}`}>
+      {step >= 1 && step < 4 && (
+        <FadeIn>
+          <h1 className="text-2xl md:text-4xl font-serif text-center mb-8 px-6">
+            You are not meant to enter here casually.
+          </h1>
+        </FadeIn>
+      )}
 
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
-    }
+      {step === 2 && (
+        <FadeIn delay={200}>
+          <button 
+            onClick={handleAsk}
+            className="px-8 py-3 border border-gray-600 rounded-full hover:bg-white/5 transition-colors text-sm tracking-widest uppercase"
+          >
+            Ask Permission
+          </button>
+        </FadeIn>
+      )}
 
-    @keyframes glowPulse {
-      0%, 100% { 
-        box-shadow: 0 0 20px rgba(196, 69, 105, 0.35),
-                    0 0 40px rgba(196, 69, 105, 0.2);
-      }
-      50% { 
-        box-shadow: 0 0 30px rgba(196, 69, 105, 0.5),
-                    0 0 60px rgba(196, 69, 105, 0.3);
-      }
-    }
+      {step === 3 && (
+        <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-xs relative">
+          <input
+            autoFocus
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter your answer..."
+            className={`w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-center text-white focus:outline-none focus:border-[#8B1E3F] focus:ring-1 focus:ring-[#8B1E3F] transition-all backdrop-blur-sm ${shake ? 'animate-shake' : ''}`}
+          />
+          {errorMsg && <p className="text-[#C44569] text-xs mt-4 tracking-wide absolute -bottom-8">{errorMsg}</p>}
+        </form>
+      )}
 
-    @keyframes breathe {
-      0%, 100% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-    }
+      {step === 4 && <h2 className="text-xl animate-pulse text-gray-400">...thinking</h2>}
+      {step === 5 && <h1 className="text-4xl font-serif text-[#E8E6EA]">Come in.</h1>}
+    </div>
+  );
+};
 
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
+// PAGE 2: THE PAUSE
+const PagePause = ({ onNext }) => {
+  const [progress, setProgress] = useState(0);
+  const [showBtn, setShowBtn] = useState(false);
 
-    ::-webkit-scrollbar-track {
-      background: #14141B;
-    }
+  useEffect(() => {
+    setTimeout(() => setProgress(100), 500);
+    setTimeout(() => setShowBtn(true), 4500);
+  }, []);
 
-    ::-webkit-scrollbar-thumb {
-      background: #8B1E3F;
-      border-radius: 3px;
-    }
+  return (
+    <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto px-8 text-center">
+      <FadeIn>
+        <h2 className="text-2xl md:text-3xl font-serif mb-4">Don't rush.</h2>
+      </FadeIn>
+      <FadeIn delay={1200}>
+        <p className="text-gray-400 mb-12">Just stay here for a moment.</p>
+      </FadeIn>
+      
+      <div className="w-full max-w-md h-[2px] bg-gray-800 rounded-full overflow-hidden mb-12">
+        <div 
+          className="h-full bg-[#C44569]"
+          style={{ width: `${progress}%`, transition: 'width 4000ms cubic-bezier(0.4, 0, 0.2, 1)' }}
+        />
+      </div>
 
-    button:hover {
-      background: #C44569 !important;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(196, 69, 105, 0.4);
-    }
+      <div className={`transition-opacity duration-1000 ${showBtn ? 'opacity-100' : 'opacity-0'}`}>
+        <button onClick={onNext} className="text-sm tracking-widest hover:text-[#C44569] transition-colors border-b border-transparent hover:border-[#C44569] pb-1">
+          CONTINUE IF YOU TRUST ME
+        </button>
+      </div>
+    </div>
+  );
+};
 
-    .envelope:hover {
-      background: #C44569 !important;
-      transform: translateX(5px);
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
+// PAGE 3: 10 THINGS
+const PageThings = ({ onNext }) => {
+  const [index, setIndex] = useState(0);
+  const cards = [
+    "Your soft, adorable voice… it lingers even after you stop speaking",
+    "The way your body quietly reacts when I guide you 🙇‍♀️",
+    "Your sweetness in obeying even the smallest requests 😚",
+    "You feel like a breath of fresh air in a noisy world 🍃",
+    "You make me laugh 😂",
+    "The warmth and softness of Your boobies 😋... impossible to ignore 🤍",
+    "Your constant need for closeness and cuddles 🫂💗",
+    "Your first asshole fuck story 😅",
+    "How easy it is to talk to you… I could stay there forever ✨",
+    "Your surrender… every \"yes, sir\" carries trust, and I feel it 🖤"
+  ];
 
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  const handleNext = () => {
+    if (index < cards.length) setIndex(p => p + 1);
+  };
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+  return (
+    <div 
+      className="h-full w-full flex flex-col items-center justify-center px-6 cursor-pointer"
+      onClick={handleNext}
+    >
+      {index < cards.length ? (
+        <div key={index} className="animate-slideUpFade max-w-lg w-full bg-[#14141B]/80 backdrop-blur-md border border-white/5 p-10 rounded-xl shadow-[0_0_30px_rgba(139,30,63,0.1)] text-center">
+          <p className="text-lg md:text-xl leading-relaxed font-light text-gray-200">
+            {cards[index]}
+          </p>
+          <div className="mt-6 text-xs text-gray-600 uppercase tracking-widest">
+            {index + 1} / {cards.length}
+          </div>
+        </div>
+      ) : (
+        <div className="animate-pulse">
+           <button 
+            onClick={(e) => { e.stopPropagation(); onNext(); }}
+            className="px-10 py-4 bg-[#8B1E3F]/20 border border-[#8B1E3F] rounded text-[#E8E6EA] hover:bg-[#8B1E3F]/40 transition-all shadow-[0_0_20px_rgba(139,30,63,0.3)]"
+          >
+            Come closer
+          </button>
+        </div>
+      )}
+      <div className="absolute bottom-8 text-xs text-gray-700 pointer-events-none">
+        {index < cards.length && "Tap to continue"}
+      </div>
+    </div>
+  );
+};
 
-    const ValentineStory = () => {
-      const [currentPage, setCurrentPage] = useState(0);
-      const [inputValue, setInputValue] = useState('');
-      const [showInput, setShowInput] = useState(false);
-      const [showError, setShowError] = useState(false);
-      const [thinking, setThinking] = useState(false);
-      const [progressTimer, setProgressTimer] = useState(0);
-      const [visibleCards, setVisibleCards] = useState(0);
-      const [visibleLines, setVisibleLines] = useState(0);
-      const [canAdvance, setCanAdvance] = useState(false);
-      const [visibleEnvelopes, setVisibleEnvelopes] = useState([]);
-      const [showGoodGirl, setShowGoodGirl] = useState(false);
-      const audioRef = useRef(null);
-      const heartbeatRef = useRef(null);
+// PAGE 4: CLAIM
+const PageClaim = ({ onNext }) => {
+  const [line, setLine] = useState(0);
 
-      // Load progress from localStorage
-      useEffect(() => {
-        const savedPage = localStorage.getItem('valentine-progress');
-        if (savedPage) {
-          setCurrentPage(parseInt(savedPage, 10));
+  useEffect(() => {
+    setTimeout(() => setLine(1), 500);
+    setTimeout(() => setLine(2), 2500);
+    setTimeout(() => setLine(3), 4500);
+    setTimeout(() => setLine(4), 6000);
+  }, []);
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center bg-[#080809] text-center px-6">
+      <div className="space-y-8 font-serif text-xl md:text-3xl text-gray-300">
+        <FadeIn className={line >= 1 ? 'opacity-100' : 'opacity-0 hidden'}>
+          <p>You don't lose control.</p>
+        </FadeIn>
+        <FadeIn className={line >= 2 ? 'opacity-100' : 'opacity-0 hidden'}>
+          <p>You place it in my hands.</p>
+        </FadeIn>
+        <FadeIn className={line >= 3 ? 'opacity-100' : 'opacity-0 hidden'}>
+          <p className="text-[#8B1E3F]">And I never drop it.</p>
+        </FadeIn>
+      </div>
+      
+      <div className={`mt-16 transition-opacity duration-1000 ${line >= 4 ? 'opacity-100' : 'opacity-0'}`}>
+         <button onClick={onNext} className="text-sm tracking-widest text-gray-500 hover:text-white transition-colors">
+          KEEP READING
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// PAGE 5: PRIVATE (Timer)
+const PagePrivate = ({ onNext }) => {
+  const [step, setStep] = useState(0);
+  const [timer, setTimer] = useState(null);
+
+  useEffect(() => {
+    const sequence = async () => {
+      // Step 1: Phone down (5s)
+      setStep(1); setTimer(5);
+      await countdown(5);
+      
+      // Step 2: Breath (4s)
+      setStep(2); setTimer(4);
+      await countdown(4);
+
+      // Step 3: Read (1s)
+      setStep(3); setTimer(1);
+      await countdown(1);
+
+      // Step 4: Good
+      setStep(4);
+      setTimeout(() => setStep(5), 2000);
+    };
+    sequence();
+  }, []);
+
+  const countdown = (seconds) => {
+    return new Promise(resolve => {
+      let remaining = seconds;
+      const interval = setInterval(() => {
+        remaining -= 1;
+        setTimer(remaining);
+        if (remaining <= 0) {
+          clearInterval(interval);
+          resolve();
         }
-      }, []);
+      }, 1000);
+    });
+  };
 
-      // Save progress to localStorage
-      useEffect(() => {
-        localStorage.setItem('valentine-progress', currentPage.toString());
-      }, [currentPage]);
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center px-4 pointer-events-none select-none">
+      {step === 1 && (
+        <div className="animate-fadeIn">
+          <p className="text-xl mb-6">Put your phone down for five seconds</p>
+          <div className="text-6xl font-serif text-[#8B1E3F]">{timer}</div>
+        </div>
+      )}
+      {step === 2 && (
+        <div className="animate-fadeIn">
+           <p className="text-xl mb-6">Take one slow breath</p>
+           <div className="w-16 h-16 rounded-full border-2 border-gray-700 animate-ping mx-auto"></div>
+        </div>
+      )}
+      {step === 3 && (
+        <div className="animate-fadeIn">
+           <p className="text-xl">Now read the next line</p>
+        </div>
+      )}
+      {step === 4 && <h1 className="text-4xl font-serif text-[#C44569] animate-pulse">Good.</h1>}
+      
+      {step === 5 && (
+        <div className="pointer-events-auto animate-fadeIn">
+          <button onClick={onNext} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded border border-white/10 transition-colors">
+            I will listen
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
-      // Initialize audio
-      useEffect(() => {
-        if (audioRef.current && currentPage >= 1) {
-          audioRef.current.volume = 0.30;
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(e => {
-              console.log('Audio autoplay blocked - will play on first interaction');
-              document.addEventListener('click', () => {
-                audioRef.current.play();
-              }, { once: true });
-            });
-          }
-        }
-      }, [currentPage]);
+// PAGE 6: ENVELOPES
+const PageEnvelopes = ({ onNext, initialOpened = [] }) => {
+  const [opened, setOpened] = useState(initialOpened);
+  const [showFinal, setShowFinal] = useState(false);
 
-      // Gradually increase volume to Page 7
-      useEffect(() => {
-        if (audioRef.current && currentPage >= 1 && currentPage <= 7) {
-          const targetVolume = 0.30 + ((currentPage - 1) / 6) * 0.15;
-          audioRef.current.volume = Math.min(targetVolume, 0.45);
-        }
-      }, [currentPage]);
+  useEffect(() => {
+    if (opened.length === 3) {
+      saveProgress(6, { openedEnvelopes: [1, 2, 3] });
+      setTimeout(() => setShowFinal(true), 2500);
+    }
+  }, [opened]);
 
-      // Page 1: Entry ritual timing
-      useEffect(() => {
-        if (currentPage === 0) {
-          setTimeout(() => setCanAdvance(true), 800);
-        }
-      }, [currentPage]);
+  const handleOpen = (id) => {
+    if (!opened.includes(id)) {
+      const newOpened = [...opened, id];
+      setOpened(newOpened);
+      saveProgress(6, { openedEnvelopes: newOpened });
+    }
+  };
 
-      // Page 2: Progress bar
-      useEffect(() => {
-        if (currentPage === 2) {
-          setProgressTimer(0);
-          setCanAdvance(false);
-          const interval = setInterval(() => {
-            setProgressTimer(prev => {
-              if (prev >= 100) {
-                clearInterval(interval);
-                setCanAdvance(true);
-                return 100;
-              }
-              return prev + 1;
-            });
-          }, 100);
-          return () => clearInterval(interval);
-        }
-      }, [currentPage]);
+  const EnvelopeContent = ({ id }) => {
+    if (id === 1) return (
+      <p>You spend so much time holding yourself together. Choosing the right words… reacting the right way… pretending you're more composed than you really feel. <br/><br/>You don't need that here. Here you can slow down, breathe, and let me hold the moment for you. I'm not going anywhere.</p>
+    );
+    if (id === 2) return (
+      <p>Look at you… following every line properly. Such a well behaved girl. <br/><br/>Makes me wonder how long that innocence lasts when I start pushing a little more.</p>
+    );
+    if (id === 3) return (
+      <p>Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home... <br/><br/>My very first words are "Look at you, my little slut, so eager and ready for Master" and then...........</p>
+    );
+  };
 
-      // Page 3: Card reveals
-      useEffect(() => {
-        if (currentPage === 3) {
-          setVisibleCards(0);
-          setCanAdvance(true);
-        }
-      }, [currentPage]);
-
-      // Page 4: Line reveals and heartbeat
-      useEffect(() => {
-        if (currentPage === 4) {
-          setVisibleLines(0);
-          setCanAdvance(false);
-          if (heartbeatRef.current) {
-            heartbeatRef.current.volume = 0.2;
-            heartbeatRef.current.play().catch(e => console.log('Heartbeat playback delayed'));
-          }
-          setTimeout(() => setVisibleLines(1), 300);
-          setTimeout(() => setVisibleLines(2), 1200);
-          setTimeout(() => setVisibleLines(3), 2100);
-          setTimeout(() => setCanAdvance(true), 2500);
-        }
-      }, [currentPage]);
-
-      // Page 5: Timed reading
-      useEffect(() => {
-        if (currentPage === 5) {
-          setVisibleLines(0);
-          setCanAdvance(false);
-          setTimeout(() => setVisibleLines(1), 500);
-          setTimeout(() => setVisibleLines(2), 5500);
-          setTimeout(() => setVisibleLines(3), 9500);
-          setTimeout(() => setVisibleLines(4), 10500);
-          setTimeout(() => setCanAdvance(true), 11000);
-        }
-      }, [currentPage]);
-
-      // Page 6: Envelope reveals
-      useEffect(() => {
-        if (currentPage === 6) {
-          setVisibleEnvelopes([]);
-          setShowGoodGirl(false);
-          setCanAdvance(true);
-        }
-      }, [currentPage]);
-
-      const handlePasswordSubmit = () => {
-        const correctAnswers = ['rishi', 'flash', 'flash133566'];
-        if (correctAnswers.includes(inputValue.toLowerCase().trim())) {
-          setThinking(true);
-          setTimeout(() => {
-            setCurrentPage(1);
-            setThinking(false);
-            setShowInput(false);
-          }, 3000);
-        } else {
-          setShowError(true);
-          setTimeout(() => setShowError(false), 1000);
-        }
-      };
-
-      const handleCardTap = () => {
-        if (visibleCards < 10) {
-          setVisibleCards(prev => prev + 1);
-        }
-      };
-
-      const toggleEnvelope = (index) => {
-        if (visibleEnvelopes.includes(index)) {
-          setVisibleEnvelopes(prev => prev.filter(i => i !== index));
-        } else {
-          setVisibleEnvelopes(prev => [...prev, index]);
-          if (visibleEnvelopes.length === 2 && !visibleEnvelopes.includes(index)) {
-            setTimeout(() => setShowGoodGirl(true), 500);
-          }
-        }
-      };
-
-      const cards = [
-        "Your soft, adorable voice… it lingers even after you stop speaking",
-        "The way your body quietly reacts when I guide you 🙇‍♀️",
-        "Your sweetness in obeying even the smallest requests 😚",
-        "You feel like a breath of fresh air in a noisy world 🍃",
-        "You make me laugh 😂",
-        "The warmth and softness of Your boobies 😋... impossible to ignore 🤍",
-        "Your constant need for closeness and cuddles 🫂💗",
-        "Your first asshole fuck story 😅",
-        "How easy it is to talk to you… I could stay there forever ✨",
-        "Your surrender… every \"yes, sir\" carries trust, and I feel it 🖤"
-      ];
-
-      const envelopeContents = [
-        "You spend so much time holding yourself together.\nChoosing the right words… reacting the right way… pretending you're more composed than you really feel.\nYou don't need that here.\nHere you can slow down, breathe, and let me hold the moment for you.\nI'm not going anywhere.",
-        "Look at you… following every line properly.\nSuch a well behaved girl.\nMakes me wonder how long that innocence lasts when I start pushing a little more.",
-        "Imagine this, my obedient submissive slut. You've been waiting just as I commanded, on your hands and knees in the entryway of your home, heart pounding with anticipation. The door clicks open, and there you are, my sweet girl, positioned perfectly for your Master. Your eyes lift slowly to meet mine, locking in that intense gaze for a lingering moment, full of devotion and desire. Then, as a good sub should, you lower them submissively, casting your lashes down to the floor, exposing the curve of your neck like an offering.\n\nMy very first words are \"Look at you, my little slut, so eager and ready for Master\" and then........."
-      ];
-
-      const styles = {
-        container: {
-          minHeight: '100vh',
-          width: '100vw',
-          background: 'linear-gradient(135deg, #0B0B0F 0%, #14141B 50%, #0B0B0F 100%)',
-          backgroundSize: '200% 200%',
-          animation: 'breathe 8s ease-in-out infinite',
-          color: '#E8E6EA',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        },
-        page: {
-          maxWidth: '760px',
-          width: '90%',
-          padding: '2rem',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          minHeight: '100vh',
-        },
-        text: {
-          fontFamily: "'Inter', sans-serif",
-          fontSize: '1.4rem',
-          lineHeight: '2',
-          letterSpacing: '0.02em',
-          color: '#E8E6EA',
-          marginBottom: '1.5rem',
-        },
-        heading: {
-          fontFamily: "'Playfair Display', serif",
-          fontSize: '2.5rem',
-          marginBottom: '3rem',
-          color: '#E8E6EA',
-          letterSpacing: '0.02em',
-        },
-        button: {
-          marginTop: '2rem',
-          padding: '1rem 2.5rem',
-          fontSize: '1.1rem',
-          fontFamily: "'Inter', sans-serif",
-          background: '#8B1E3F',
-          color: '#E8E6EA',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease',
-          letterSpacing: '0.05em',
-        },
-        input: {
-          width: '100%',
-          maxWidth: '400px',
-          padding: '1rem',
-          fontSize: '1.2rem',
-          fontFamily: "'Inter', sans-serif",
-          background: '#14141B',
-          color: '#E8E6EA',
-          border: '2px solid #8B1E3F',
-          borderRadius: '4px',
-          outline: 'none',
-          marginTop: '1rem',
-          textAlign: 'center',
-        },
-        prompt: {
-          fontSize: '1.3rem',
-          color: '#9A98A3',
-          marginBottom: '0.5rem',
-          fontFamily: "'Inter', sans-serif",
-        },
-        error: {
-          color: '#C44569',
-          marginTop: '1rem',
-          fontSize: '1rem',
-        },
-        thinkingContainer: {
-          marginTop: '2rem',
-          opacity: 0.4,
-        },
-        thinking: {
-          fontSize: '1.2rem',
-          color: '#9A98A3',
-          fontStyle: 'italic',
-          marginBottom: '1rem',
-        },
-        progressBar: {
-          width: '100%',
-          maxWidth: '500px',
-          height: '4px',
-          background: '#14141B',
-          borderRadius: '2px',
-          overflow: 'hidden',
-        },
-        progressFill: {
-          height: '100%',
-          background: '#C44569',
-          transition: 'width 100ms ease-in-out',
-        },
-        cardsContainer: {
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem',
-          width: '100%',
-          maxWidth: '600px',
-        },
-        card: {
-          padding: '2rem',
-          background: 'rgba(20, 20, 27, 0.7)',
-          border: '1px solid rgba(139, 30, 63, 0.3)',
-          borderRadius: '8px',
-          fontSize: '1.2rem',
-          lineHeight: '1.8',
-          color: '#E8E6EA',
-          backdropFilter: 'blur(10px)',
-        },
-        envelopesContainer: {
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem',
-          width: '100%',
-          maxWidth: '700px',
-        },
-        envelopeWrapper: {
-          display: 'flex',
-          flexDirection: 'column',
-        },
-        envelope: {
-          padding: '1.5rem 2rem',
-          background: '#8B1E3F',
-          color: '#E8E6EA',
-          border: 'none',
-          borderRadius: '8px',
-          fontSize: '1.2rem',
-          cursor: 'pointer',
-          fontFamily: "'Inter', sans-serif",
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          transition: 'all 0.3s ease',
-        },
-        envelopeContent: {
-          padding: '2rem',
-          background: 'rgba(20, 20, 27, 0.9)',
-          border: '1px solid rgba(139, 30, 63, 0.3)',
-          borderRadius: '8px',
-          marginTop: '1rem',
-          fontSize: '1.1rem',
-          lineHeight: '1.9',
-          color: '#E8E6EA',
-          whiteSpace: 'pre-line',
-          textAlign: 'left',
-        },
-        letterContainer: {
-          width: '100%',
-          maxWidth: '700px',
-          maxHeight: '70vh',
-          overflowY: 'auto',
-          padding: '2rem',
-          background: 'rgba(20, 20, 27, 0.6)',
-          borderRadius: '12px',
-          border: '1px solid rgba(139, 30, 63, 0.2)',
-          backdropFilter: 'blur(10px)',
-        },
-        letterContent: {
-          fontFamily: "'Inter', sans-serif",
-        },
-        letterText: {
-          fontSize: '1.1rem',
-          lineHeight: '2',
-          color: '#E8E6EA',
-          marginBottom: '1.5rem',
-          textAlign: 'left',
-        },
-        valentineTitle: {
-          fontFamily: "'Playfair Display', serif",
-          color: '#C44569',
-          textAlign: 'center',
-        },
-        particles: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'radial-gradient(circle, rgba(196,69,105,0.1) 1px, transparent 1px)',
-          backgroundSize: '50px 50px',
-          opacity: 0.3,
-          animation: 'breathe 12s ease-in-out infinite',
-        },
-      };
-
-      return (
-        <div style={styles.container}>
-          <audio ref={audioRef} loop>
-            <source src="song.mp3" type="audio/mpeg" />
-          </audio>
-          <audio ref={heartbeatRef} loop>
-            <source src="heartbeat.mp3" type="audio/mpeg" />
-          </audio>
-
-          {/* Page 0: Entry */}
-          {currentPage === 0 && (
-            <div style={styles.page}>
-              {canAdvance && (
-                <>
-                  <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                    You are not meant to enter here casually.
-                  </p>
-                  {!showInput && (
-                    <button 
-                      style={{...styles.button, animation: 'fadeIn 900ms ease-out 2s backwards'}}
-                      onClick={() => setShowInput(true)}
-                    >
-                      Ask permission
-                    </button>
-                  )}
-                  {showInput && !thinking && (
-                    <div style={{animation: 'fadeUp 900ms ease-out', marginTop: '2rem'}}>
-                      <p style={styles.prompt}>Who do you belong to?</p>
-                      <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                        style={{...styles.input, animation: showError ? 'shake 0.5s' : 'none'}}
-                        autoFocus
-                      />
-                      {showError && <p style={styles.error}>The door stays closed.</p>}
-                    </div>
-                  )}
-                  {thinking && (
-                    <div style={{...styles.thinkingContainer, animation: 'fadeIn 900ms ease-out'}}>
-                      <p style={styles.thinking}>...thinking</p>
-                      <p style={{...styles.thinking, animation: 'fadeIn 900ms ease-out 3s backwards'}}>
-                        Come in.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Page 1: Initial message */}
-          {currentPage === 1 && (
-            <div style={styles.page}>
-              <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                You are not meant to enter here casually.
-              </p>
-              <button 
-                style={{...styles.button, animation: 'fadeIn 900ms ease-out 1s backwards'}}
-                onClick={() => setCurrentPage(2)}
-              >
-                Enter
-              </button>
-            </div>
-          )}
-
-          {/* Page 2: The Pause */}
-          {currentPage === 2 && (
-            <div style={styles.page}>
-              <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                Don't rush.
-              </p>
-              <p style={{...styles.text, animation: 'fadeIn 900ms ease-out 300ms backwards'}}>
-                Just stay here for a moment.
-              </p>
-              <div style={{...styles.progressBar, marginTop: '3rem'}}>
-                <div style={{...styles.progressFill, width: `${progressTimer}%`}} />
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
+      <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl transition-opacity duration-1000 ${showFinal ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
+        {[1, 2, 3].map((id) => (
+          <div 
+            key={id}
+            onClick={() => handleOpen(id)}
+            className={`
+              relative min-h-[300px] p-6 rounded-lg border border-white/10 cursor-pointer transition-all duration-700
+              ${opened.includes(id) ? 'bg-[#14141B] scale-100' : 'bg-[#0B0B0F] hover:scale-105 hover:border-[#8B1E3F]/50 flex items-center justify-center'}
+            `}
+          >
+            {!opened.includes(id) ? (
+              <div className="text-center">
+                <Mail className="w-12 h-12 mx-auto mb-4 text-[#8B1E3F] animate-pulse" />
+                <span className="text-xs tracking-widest uppercase text-gray-500">Envelope {id}</span>
               </div>
-              {canAdvance && (
-                <button 
-                  style={{...styles.button, animation: 'fadeIn 900ms ease-out'}}
-                  onClick={() => setCurrentPage(3)}
-                >
-                  Continue if you trust me
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Page 3: 10 Things */}
-          {currentPage === 3 && (
-            <div style={styles.page} onClick={handleCardTap}>
-              <h2 style={{...styles.heading, animation: 'fadeIn 900ms ease-out'}}>
-                The 10 things I like about you
-              </h2>
-              <div style={styles.cardsContainer}>
-                {cards.slice(0, visibleCards).map((card, i) => (
-                  <div 
-                    key={i}
-                    style={{
-                      ...styles.card,
-                      animation: 'fadeUp 900ms ease-out'
-                    }}
-                  >
-                    {card}
-                  </div>
-                ))}
+            ) : (
+              <div className="animate-fadeIn text-sm leading-relaxed text-gray-300 font-light">
+                <EnvelopeContent id={id} />
               </div>
-              {visibleCards === 10 && (
-                <button 
-                  style={{...styles.button, animation: 'glowPulse 2s ease-in-out infinite'}}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentPage(4);
-                  }}
-                >
-                  Come closer
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+        ))}
+      </div>
 
-          {/* Page 4: Claim */}
-          {currentPage === 4 && (
-            <div style={{...styles.page, backgroundColor: '#08080C'}}>
-              {visibleLines >= 1 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  You don't lose control.
-                </p>
-              )}
-              {visibleLines >= 2 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  You place it in my hands.
-                </p>
-              )}
-              {visibleLines >= 3 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  And I never drop it.
-                </p>
-              )}
-              {canAdvance && (
-                <button 
-                  style={{...styles.button, animation: 'fadeIn 900ms ease-out'}}
-                  onClick={() => setCurrentPage(5)}
-                >
-                  Keep reading
-                </button>
-              )}
-            </div>
-          )}
+      {showFinal && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-50 animate-fadeIn">
+          <h1 className="text-4xl font-serif text-[#E8E6EA] mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">Good girl.</h1>
+          <button 
+            onClick={onNext}
+            className="px-8 py-3 bg-[#8B1E3F] text-white rounded hover:bg-[#C44569] transition-colors shadow-[0_0_30px_rgba(139,30,63,0.4)]"
+          >
+            Stay with me
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
-          {/* Page 5: Private Section */}
-          {currentPage === 5 && (
-            <div style={styles.page}>
-              {visibleLines >= 1 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  Put your phone down for five seconds
-                </p>
-              )}
-              {visibleLines >= 2 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  Take one slow breath
-                </p>
-              )}
-              {visibleLines >= 3 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out'}}>
-                  Now read the next line
-                </p>
-              )}
-              {visibleLines >= 4 && (
-                <p style={{...styles.text, animation: 'fadeIn 900ms ease-out', color: '#C44569'}}>
-                  Good.
-                </p>
-              )}
-              {canAdvance && (
-                <button 
-                  style={{...styles.button, animation: 'fadeIn 900ms ease-out'}}
-                  onClick={() => setCurrentPage(6)}
-                >
-                  I will listen
-                </button>
-              )}
-            </div>
-          )}
+// PAGE 7: LETTER
+const PageLetter = ({ onNext }) => {
+  const [canProceed, setCanProceed] = useState(false);
+  const scrollRef = useRef(null);
 
-          {/* Page 6: Envelopes */}
-          {currentPage === 6 && (
-            <div style={styles.page}>
-              <div style={styles.envelopesContainer}>
-                {[0, 1, 2].map((index) => (
-                  <div key={index} style={styles.envelopeWrapper}>
-                    <button
-                      className="envelope"
-                      style={{
-                        ...styles.envelope,
-                        animation: `fadeIn 900ms ease-out ${index * 200}ms backwards`
-                      }}
-                      onClick={() => toggleEnvelope(index)}
-                    >
-                      Envelope {index + 1}
-                      <span style={{marginLeft: '0.5rem'}}>
-                        {visibleEnvelopes.includes(index) ? '▼' : '▶'}
-                      </span>
-                    </button>
-                    {visibleEnvelopes.includes(index) && (
-                      <div style={{...styles.envelopeContent, animation: 'fadeIn 600ms ease-out'}}>
-                        {envelopeContents[index]}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {showGoodGirl && (
-                <p style={{
-                  ...styles.text, 
-                  color: '#C44569',
-                  fontSize: '1.8rem',
-                  marginTop: '2rem',
-                  animation: 'glowPulse 2s ease-in-out infinite'
-                }}>
-                  Good girl.
-                </p>
-              )}
-              {visibleEnvelopes.length === 3 && (
-                <button 
-                  style={{...styles.button, animation: 'fadeIn 900ms ease-out', marginTop: '2rem'}}
-                  onClick={() => setCurrentPage(7)}
-                >
-                  Stay with me
-                </button>
-              )}
-            </div>
-          )}
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Allow small margin of error (5px)
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      setCanProceed(true);
+    }
+  };
 
-          {/* Page 7: Letter */}
-          {currentPage === 7 && (
-            <div style={styles.page}>
-              <div style={styles.letterContainer}>
-                <div style={styles.letterContent}>
-                  <p style={styles.letterText}>
-                    We only met yesterday…<br />
-                    and still I ended up building something like this for you.<br />
-                    I wouldn't spend this kind of effort on just anyone.
-                  </p>
-                  <p style={styles.letterText}>
-                    But you are different, K 🖤
-                  </p>
-                  <p style={styles.letterText}>
-                    Maybe it's an infatuation… maybe something quieter than that.<br />
-                    All I know is you feel like comfort.<br />
-                    A pause from the rough edges of life.<br />
-                    The kind of presence that makes the world go silent for a moment.
-                  </p>
-                  <p style={styles.letterText}>
-                    You have that rare pull…<br />
-                    the kind people don't fully understand, but still move toward ✨
-                  </p>
-                  <p style={styles.letterText}>
-                    Beautiful, a little dangerous… a strange mix that stays in my head longer than it should.<br />
-                    You filled a space I didn't even notice was empty.
-                  </p>
-                  <p style={styles.letterText}>
-                    It's early, I know.<br />
-                    But I don't like pretending my feelings are smaller than they are.<br />
-                    People come and go, that's normal…<br />
-                    yet you don't feel temporary to me.
-                  </p>
-                  <p style={styles.letterText}>
-                    You feel… claimed.
-                  </p>
-                  <p style={styles.letterText}>
-                    Not trapped, not forced.<br />
-                    Chosen.
-                  </p>
-                  <p style={styles.letterText}>
-                    I'm not usually possessive, but with you something shifts.<br />
-                    I don't want distance.<br />
-                    I don't want to be casual.
-                  </p>
-                  <p style={styles.letterText}>
-                    Stay close 🤍
-                  </p>
-                  <p style={styles.letterText}>
-                    Think of it like a leash you don't resist…<br />
-                    because it feels warmer than freedom.<br />
-                    Something you reach for, not escape from.
-                  </p>
-                  <p style={styles.letterText}>
-                    I'll make it gentle enough that you won't want to leave…<br />
-                    and strong enough that you won't need to 🔒
-                  </p>
-                  <p style={styles.letterText}>
-                    I think that's enough for tonight, sweetheart.
-                  </p>
-                  <p style={{...styles.letterText, fontStyle: 'italic', marginTop: '2rem'}}>
-                    ~ R / Flash
-                  </p>
-                </div>
-              </div>
-              <button 
-                style={{...styles.button, marginTop: '2rem'}}
-                onClick={() => setCurrentPage(8)}
-              >
-                Continue
-              </button>
-            </div>
-          )}
+  return (
+    <div className="h-full flex items-center justify-center p-4 md:p-8">
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="letter-container w-full max-w-2xl bg-[#E8E6EA]/5 rounded-lg p-8 md:p-12 overflow-y-auto max-h-[75vh] shadow-2xl border border-white/5 relative"
+      >
+        <div className="font-serif text-lg leading-loose text-gray-300 space-y-6">
+          <p>We only met yesterday… and still I ended up building something like this for you. I wouldn't spend this kind of effort on just anyone.</p>
+          <p className="text-white font-semibold">But you are different, K 🖤</p>
+          <p>Maybe it's an infatuation… maybe something quieter than that. All I know is you feel like comfort. A pause from the rough edges of life. The kind of presence that makes the world go silent for a moment.</p>
+          <p>You have that rare pull… the kind people don't fully understand, but still move toward ✨</p>
+          <p>Beautiful, a little dangerous… a strange mix that stays in my head longer than it should. You filled a space I didn't even notice was empty.</p>
+          <p>It's early, I know. But I don't like pretending my feelings are smaller than they are. People come and go, that's normal… yet you don't feel temporary to me.</p>
+          <p className="text-[#C44569] text-xl italic">You feel… claimed.</p>
+          <p>Not trapped, not forced. Chosen.</p>
+          <p>I'm not usually possessive, but with you something shifts. I don't want distance. I don't want to be casual.</p>
+          <p className="text-center text-xl my-8">Stay close 🤍</p>
+          <p>Think of it like a leash you don't resist… because it feels warmer than freedom. Something you reach for, not escape from.</p>
+          <p>I'll make it gentle enough that you won't want to leave… and strong enough that you won't need to 🔒</p>
+          <p>I think that's enough for tonight, sweetheart.</p>
+          <p className="text-right mt-12 font-accent text-3xl text-[#8B1E3F]">~ R / Flash</p>
+          
+          <div className="h-24 flex items-center justify-center mt-8">
+             {canProceed ? (
+               <button onClick={onNext} className="animate-fadeIn px-8 py-3 bg-[#8B1E3F] text-white rounded hover:bg-[#C44569] shadow-lg">
+                 CONTINUE
+               </button>
+             ) : (
+               <ChevronDown className="animate-bounce text-gray-500" />
+             )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-          {/* Page 8: Valentine */}
-          {currentPage === 8 && (
-            <div style={{...styles.page, background: 'linear-gradient(135deg, #1a0e14 0%, #2d1825 100%)'}}>
-              <div style={styles.particles} />
-              <h1 style={{
-                ...styles.valentineTitle,
-                fontFamily: "'Great Vibes', cursive",
-                fontSize: '3.5rem',
-                animation: 'fadeIn 1200ms ease-out'
-              }}>
-                Happy Valentine's Day, K ❤️
-              </h1>
-              <p style={{...styles.text, animation: 'fadeIn 900ms ease-out 1s backwards', marginTop: '3rem'}}>
-                You're not here because I control you
-              </p>
-              <p style={{...styles.text, animation: 'fadeIn 900ms ease-out 1.3s backwards'}}>
-                You're here because you trust me
-              </p>
-              <button 
-                style={{...styles.button, animation: 'fadeIn 900ms ease-out 2s backwards', marginTop: '3rem'}}
-                onClick={() => setCurrentPage(9)}
-              >
-                Continue
-              </button>
-            </div>
-          )}
+// PAGE 8: VALENTINE
+const PageValentine = ({ onNext }) => {
+  const [stage, setStage] = useState(0);
 
-          {/* Final Page */}
-          {currentPage === 9 && (
-            <div style={styles.page}>
-              <h1 style={{
-                ...styles.valentineTitle,
-                fontSize: '4rem',
-                animation: 'fadeIn 1500ms ease-out, breathe 8s ease-in-out infinite'
-              }}>
-                Stay.
-              </h1>
-            </div>
+  useEffect(() => {
+    setTimeout(() => setStage(1), 500); // Happy Val
+    setTimeout(() => setStage(2), 3500); // Not control
+    setTimeout(() => setStage(3), 6000); // Trust
+    setTimeout(onNext, 9500);
+  }, []);
+
+  return (
+    <div className="h-full relative overflow-hidden flex flex-col items-center justify-center text-center bg-gradient-to-b from-[#0B0B0F] to-[#2D0A15]">
+      {/* Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+           <div 
+             key={i}
+             className="absolute text-[#C44569]/30 text-2xl animate-float"
+             style={{
+               left: `${Math.random() * 100}%`,
+               top: `${Math.random() * 100}%`,
+               animationDelay: `${Math.random() * 5}s`,
+               animationDuration: `${10 + Math.random() * 10}s`
+             }}
+           >
+             {Math.random() > 0.5 ? '❤' : '✨'}
+           </div>
+        ))}
+      </div>
+
+      <div className="z-10 px-6">
+        {stage >= 1 && (
+          <h1 className="font-accent text-5xl md:text-7xl text-[#E8E6EA] mb-12 animate-scaleIn drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+            Happy Valentine's Day, K ❤️
+          </h1>
+        )}
+        
+        <div className="space-y-6 font-serif text-xl md:text-2xl text-gray-300">
+          {stage >= 2 && (
+            <FadeIn>
+              <p>You're not here because I control you</p>
+            </FadeIn>
+          )}
+          {stage >= 3 && (
+            <FadeIn delay={500}>
+              <p>You're here because you trust me</p>
+            </FadeIn>
           )}
         </div>
-      );
-    };
+      </div>
+    </div>
+  );
+};
 
-    ReactDOM.render(<ValentineStory />, document.getElementById('root'));
-  </script>
-</body>
-</html>
+// PAGE 9: FINAL
+const PageFinal = () => {
+  return (
+    <div className="h-full flex items-center justify-center bg-[#0B0B0F]">
+       <h1 className="font-serif text-6xl md:text-8xl text-[#E8E6EA] tracking-tighter animate-breath">
+         Stay.
+       </h1>
+    </div>
+  );
+};
+
+// --- MAIN APP COMPONENT ---
+
+export default function App() {
+  const [page, setPage] = useState(1);
+  const [init, setInit] = useState(false);
+  const [audioController] = useState(() => new AudioController());
+  const [envelopes, setEnvelopes] = useState([]);
+
+  // Initialize from storage
+  useEffect(() => {
+    const saved = loadProgress();
+    if (saved.currentPage > 1) {
+      setPage(saved.currentPage);
+      if (saved.openedEnvelopes) setEnvelopes(saved.openedEnvelopes);
+    }
+    setInit(true);
+
+    // Global style injection for animations and fonts
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+      
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+        20%, 40%, 60%, 80% { transform: translateX(10px); }
+      }
+      @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes float {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
+      }
+      @keyframes scaleIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      @keyframes breath {
+        0%, 100% { transform: scale(1); opacity: 0.8; text-shadow: 0 0 20px rgba(196,69,105,0.2); }
+        50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 40px rgba(196,69,105,0.6); }
+      }
+      
+      /* Scrollbar Hiding */
+      .letter-container::-webkit-scrollbar { width: 4px; }
+      .letter-container::-webkit-scrollbar-track { background: transparent; }
+      .letter-container::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+      body { overflow: hidden; background-color: #0B0B0F; }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      audioController.stop();
+    };
+  }, []);
+
+  // Audio Volume Logic
+  useEffect(() => {
+    const targetVol = 0.3 + ((page - 1) * 0.0214);
+    audioController.setVolume(Math.min(targetVol, 0.45));
+    saveProgress(page, { openedEnvelopes: envelopes });
+  }, [page, envelopes]);
+
+  if (!init) return <div className="h-screen bg-black" />;
+
+  const nextPage = () => setPage(p => p + 1);
+
+  return (
+    <div className="w-screen h-screen bg-[#0B0B0F] text-[#E8E6EA] font-sans selection:bg-[#8B1E3F] selection:text-white overflow-hidden relative">
+      
+      {/* Dynamic Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background: `radial-gradient(circle at 50% 50%, #1a1a24 0%, #0B0B0F 70%)`,
+          animation: 'breath 8s infinite ease-in-out'
+        }}
+      />
+
+      {/* Content Container */}
+      <main className="relative z-10 w-full h-full">
+        {page === 1 && <PageEntry onNext={nextPage} startAudio={() => audioController.init()} />}
+        {page === 2 && <PagePause onNext={nextPage} />}
+        {page === 3 && <PageThings onNext={nextPage} />}
+        {page === 4 && <PageClaim onNext={nextPage} />}
+        {page === 5 && <PagePrivate onNext={nextPage} />}
+        {page === 6 && <PageEnvelopes onNext={nextPage} initialOpened={envelopes} />}
+        {page === 7 && <PageLetter onNext={nextPage} />}
+        {page === 8 && <PageValentine onNext={nextPage} />}
+        {page === 9 && <PageFinal />}
+      </main>
+
+    </div>
+  );
+}
